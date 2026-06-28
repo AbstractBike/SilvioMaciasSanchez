@@ -1,0 +1,16 @@
+{
+  "name": "silvio-macias-sanchez",
+  "version": "0.0.0",
+  "description": "Investigación y documentación sobre patrones de IA, motivación y sistemas de conocimiento",
+  "author": "Silvio Macías Sánchez",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AbstractBike/SilvioMaciasSanchez.git"
+  },
+  "keywords": [
+    "ai",
+    "motivation",
+    "patterns",
+    "research"
+  ]
+}
