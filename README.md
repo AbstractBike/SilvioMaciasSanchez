@@ -1,0 +1,2 @@
+# SilvioMaciasSanchez
+IA patterns 
