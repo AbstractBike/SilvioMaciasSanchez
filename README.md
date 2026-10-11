@@ -37,3 +37,11 @@ El patrón tiene dos modos de fallo que conviene anticipar. El primero es la **c
 calibrada**: pedir esfuerzo en el momento equivocado mata la motivación en vez de encenderla. Por eso el agente debe leer señales de cansancio o frustración y bajar la exigencia, no subirla.
 
 La tensión filosófica de fondo vale la pena nombrarla: este patrón usa la automatización para *reducir* el trabajo que la automatización hace. Es deliberadamente ineficiente a corto plazo para ser generativo a largo plazo. Funciona solo si ambos —tú y el agente— están de acuerdo en que el objetivo no es terminar, sino que tú crezcas terminando.
+
+## Abstract Architectures
+
+Patrones de arquitectura para sistemas con IA.
+
+### [Cristalización](abstract-architectures/cristalizacion.md)
+
+Pedirle a la IA la forma de hacerlo, no el resultado: enseñar a pescar en vez de dar pescado. Un LLM en tiempo de ejecución es *líquido* —caro, estocástico, inauditable—; el método que escribe una vez es *cristal* —código determinista, versionado y con pruebas—. Las pipelines de IA se cristalizan etapa a etapa (líquida → mixta → cristalina), y los casos que el cristal no sabe resolver se convierten en la semilla de la siguiente versión.
