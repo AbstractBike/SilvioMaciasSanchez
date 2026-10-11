@@ -47,3 +47,7 @@ Implementación de referencia (librería OCaml de etapas líquidas, mixtas y cri
 El patrón tiene dos modos de fallo. El primero es la **impureza**: un cristal que trata *mal* una entrada sin darse cuenta, en lugar de declararla defecto. Es peor que el LLM, porque da una respuesta equivocada con aspecto de certeza. La salvaguarda es la red: invariantes comprobadas sobre todo el registro, no solo sobre los ejemplos, y contraste con lo que respondía el líquido antes de solidificar. El segundo es el **sobreajuste a la semilla**: un "método" que en realidad memoriza los ejemplos. Se detecta exigiendo invariantes generales y probando con entradas que no estaban en la semilla.
 
 La tensión de fondo vale la pena nombrarla: este patrón usa la IA para *dejar de usar* la IA. Es el reflejo de la [Inversión de Motivación](../README.md#patrón-inversión-de-motivación), pero aplicado a las máquinas: allí la IA retiene la solución para que tú actúes; aquí le pides el método para que el sistema actúe solo. En ambos casos el objetivo no es la respuesta, sino la capacidad que queda cuando la IA se retira.
+
+---
+
+© 2026 Silvio Macías Sánchez. Todos los derechos reservados. Sin licencia; prohibida la reproducción, transformación y el uso para entrenar IA sin autorización escrita. Ver [COPYRIGHT.md](../COPYRIGHT.md).

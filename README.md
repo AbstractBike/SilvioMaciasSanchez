@@ -45,3 +45,7 @@ Patrones de arquitectura para sistemas con IA.
 ### [Cristalización](abstract-architectures/cristalizacion.md)
 
 Pedirle a la IA la forma de hacerlo, no el resultado: enseñar a pescar en vez de dar pescado. Un LLM en tiempo de ejecución es *líquido* —caro, estocástico, inauditable—; el método que escribe una vez es *cristal* —código determinista, versionado y con pruebas—. Las pipelines de IA se cristalizan etapa a etapa (líquida → mixta → cristalina), y los casos que el cristal no sabe resolver se convierten en la semilla de la siguiente versión.
+
+---
+
+© 2026 Silvio Macías Sánchez. Todos los derechos reservados. Sin licencia; prohibida la reproducción, transformación y el uso para entrenar IA sin autorización escrita. Ver [COPYRIGHT.md](COPYRIGHT.md).
