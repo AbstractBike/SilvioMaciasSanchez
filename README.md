@@ -50,6 +50,14 @@ Pedirle a la IA la forma de hacerlo, no el resultado: enseñar a pescar en vez d
 
 Cristalizar sin saber de antemano qué cristalizar. Un proxy delante del LLM ve pasar el tráfico, agrupa las peticiones en *tareas* —instrucciones fijas aplicadas a entradas que cambian— y guarda muestras, no respuestas: caña, no pescado. Cuando una tarea es estable —el modelo repite la respuesta si se le pregunta dos veces— prepara su semilla para la nucleación; una vez revisado y commiteado el cristal, el proxy la atiende sin llamar al modelo y mide el grado de cristalización de todo el tráfico.
 
+## Sistemas de ficheros
+
+Diseños de almacenamiento sobre hardware actual.
+
+### [gefs + FDP](sistemas-de-ficheros/gefs-fdp.md)
+
+Colocación de datos para gefs, el sistema de ficheros copy-on-write sobre Bε-trees de 9front, usando Flexible Data Placement de NVMe. Cada clase de bloque (pivots, hojas, metadatos de snapshots, datos) se escribe con su propio *placement handle* según cuánto vive, y lo liberado se devuelve al SSD con Deallocate tras cada commit durable. El objetivo es una amplificación de escritura del SSD cercana a 1 sin cambiar el formato en disco.
+
 ---
 
 © 2026 Silvio Macías Sánchez. Todos los derechos reservados. Libre para investigación y docencia sin ánimo de lucro, citando al autor; para uso comercial, escríbeme a silvio.macias.sanchez@abstract.bike o info@abstractarchitectures.ltd. Ver [COPYRIGHT.md](COPYRIGHT.md).
