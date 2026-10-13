@@ -97,6 +97,7 @@ Es la misma que en la Cristalización, llevada un paso más allá: allí decides
 ## Ver también
 
 - [Cristalización](cristalizacion.md): el patrón base; qué es un cristal y cómo se nuclea.
+- [Agencia](agencia.md): mientras una tarea siga líquida, que la haga el modelo más barato que la hace bien.
 - [Inversión de Motivación](../motivacion/inversion-de-motivacion.md): la misma idea de fondo, aplicada a las personas.
 
 ---

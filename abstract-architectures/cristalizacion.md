@@ -98,6 +98,7 @@ Este patrón usa la IA para *dejar de usar* la IA. Es el reflejo de la [Inversi�
 ## Ver también
 
 - [Forja](forja.md): cristalizar sin saber de antemano qué etapas hay; el propio tráfico te lo dice.
+- [Seguimiento de costes](seguimiento-de-costes.md): saber si cristalizar salió a cuenta.
 - [Inversión de Motivación](../motivacion/inversion-de-motivacion.md): la misma idea aplicada a las personas.
 
 ---
