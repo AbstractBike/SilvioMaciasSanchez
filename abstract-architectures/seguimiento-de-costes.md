@@ -7,14 +7,14 @@
 | | |
 | --- | --- |
 | **Problem** | Was jede Änderung eines Agenten kostet, weiß man beim Committen, danach geht es verloren: Eine Woche später weiß niemand, was teuer war oder ob es sich gelohnt hat. |
-| **Lösung** | Es direkt in den Commit schreiben, als git-*Trailer*: Modell, Aufwand, Tokens nach Typ, Kosten und Sitzung. |
+| **Lösung** | Es direkt in den Commit schreiben, als git-*Trailer*: Modell, Aufwand, Tokens nach Typ und Sitzung. |
 | **Nutze es für** | Jedes Repository, in dem KI-Agenten committen. |
 | **Nutze es nicht für** | Das *gesamte* Ausgabevolumen zählen: Was nicht in einem Commit endet, taucht nicht auf (dafür gibt es die Telemetrie). |
 | **Gemessen wird es an** | Dass die Summe der Trailer eines Branches genau den Kosten dieses Branches entspricht. |
 
 ## Die Idee
 
-Ein menschlicher Commit kostet Stunden; einer von einem Agenten kostet Tokens, und Tokens haben einen Preis. Dieser Preis ist beim Committen bekannt, weil die Telemetrie des Agenten ihn mitgezählt hat, und geht unmittelbar danach verloren.
+Ein menschlicher Commit kostet Stunden; einer von einem Agenten kostet Tokens. Wie viele, ist beim Committen bekannt, weil die Telemetrie des Agenten sie mitgezählt hat, und geht unmittelbar danach verloren.
 
 Die Kostenverfolgung (*token tracking*) notiert ihn **dort, wo er nicht verloren geht**: in der Commit-Nachricht. Dafür ist keine neue Infrastruktur nötig, denn git kann Trailer bereits lesen.
 
@@ -26,14 +26,13 @@ Am Ende jeder Commit-Nachricht, durch eine Leerzeile getrennt:
 Model: claude-opus-5-5
 Effort: medium
 Tokens: 20, 2684, 38678, 751187 del commit
-Cost: 0.51 USD del commit
 Session: 39dfdb59-6748-440d-8d1b-fb089f2fe82d
 ```
 
 Und mit einem einzigen Befehl erfährst du, was jede Änderung gekostet hat:
 
 ```bash
-git log --format='%h %(trailers:key=Model,valueonly,separator=%x2C) %(trailers:key=Cost,valueonly)'
+git log --format='%h %(trailers:key=Model,valueonly,separator=%x2C) %(trailers:key=Tokens,valueonly)'
 ```
 
 Alle Commits, die in diesem Repository von Agenten erstellt wurden, enthalten diese Trailer.
@@ -61,10 +60,11 @@ flowchart LR
 | `Model` | Die genaue Modell-ID. Wenn mehrere verwendet wurden (ein Subagent, ein Auftrag an die [Agentur](agencia.md)), eröffnet jeder einen eigenen Block. | Fehlt nie. |
 | `Effort` | Die Stufe des Denkaufwands, mit der die Sitzung lief. | Wird weggelassen. |
 | `Tokens` | `Eingabe, Ausgabe, Cache-Schreiben, Cache-Lesen`, in dieser Reihenfolge. | `n/d` |
-| `Cost` | Die Kosten in USD, mit dem Tarif jedes Modells. | `n/d` |
 | `Session` | Die Sitzungs-ID, um zur Telemetrie und zum Transkript zurückzukehren. | Wird weggelassen. |
 
 Die vier Tokenarten werden getrennt ausgewiesen, weil sie unterschiedlich kosten und Verschiedenes messen: Viel Cache-Lesen ist Kontext, der mitgeschleppt wird; viel Ausgabe ist geschriebene Arbeit.
+
+Die Kosten in Geld werden nicht notiert: Der Preis pro Token ändert sich mit der Zeit, und bei einem Abo zahlst du in Wirklichkeit etwas anderes. Die Tokens, nach Typ und Modell, sind die Zahl, die nicht veraltet; wer Dollar will, rechnet sie später mit dem Tagestarif aus.
 
 ### Drei Regeln
 
@@ -74,18 +74,18 @@ Die vier Tokenarten werden getrennt ausgewiesen, weil sie unterschiedlich kosten
 
 ### Was du die Historie fragen kannst
 
-- **Was ein Branch oder ein Kristall gekostet hat:** die Summe von `Cost` seiner Commits.
-- **Welches Modell was macht:** die Kosten pro Commit, gruppiert nach `Model`.
+- **Was ein Branch oder ein Kristall gekostet hat:** die Summe von `Tokens` seiner Commits.
+- **Welches Modell was macht:** die Tokens pro Commit, gruppiert nach `Model`.
 - **Ob sich das Kristallisieren gelohnt hat:** was es gekostet hat, den Kristall zu erzeugen, im Vergleich zu dem, was die Aufgabe vorher verbraucht hat.
 - **Wohin der Kontext fließt:** Commits mit viel Cache-Lesen und wenig Ausgabe sind Sitzungen, die Kontext mitschleppen, um wenig zu schreiben.
 
 ## Wie du es umsetzt
 
-1. **Telemetrie.** Der Agent exportiert seine Metriken (Tokens nach Typ und Kosten, pro Sitzung und Modell) in eine Zeitreihendatenbank. Claude Code macht das mit OpenTelemetry.
+1. **Telemetrie.** Der Agent exportiert seine Metriken (Tokens nach Typ, pro Sitzung und Modell) in eine Zeitreihendatenbank. Claude Code macht das mit OpenTelemetry.
 2. **Ein Werkzeug, das die Trailer schreibt.** Vor dem Commit sucht es über den Trailer `Session` den vorigen Commit der Sitzung, summiert, was seitdem verbraucht wurde, und gibt es genau so aus, wie es in der Nachricht stehen soll. Gibt es keine Daten, schreibt es `n/d`.
 3. **Eine Regel in den Anweisungen des Agenten:** „Beende jeden Commit mit der Ausgabe des Werkzeugs, unverändert; erfinde nie einen Wert."
 
-Ohne Telemetrie enthält das Sitzungstranskript die Tokennutzung jeder Antwort und dient für die Tokens genauso; die Kosten wären dann `n/d`.
+Ohne Telemetrie enthält das Sitzungstranskript die Tokennutzung jeder Antwort und dient genauso.
 
 ## Risiken und Schutzmaßnahmen
 
@@ -94,11 +94,10 @@ Ohne Telemetrie enthält das Sitzungstranskript die Tokennutzung jeder Antwort u
 | **Erfundene Zahlen** | Ein Agent „schätzt", statt zu messen, und die Buchhaltung taugt nichts mehr. | Die Trailer schreibt ein Werkzeug, nicht der Agent; dazu die Regel mit `n/d`. |
 | **Doppelte Zählung** | Jeder Commit trägt die Gesamtsumme der Sitzung, und das Aufsummieren der Historie bläht die Kosten auf. | Nur was seit dem vorigen Commit der Sitzung verbraucht wurde, in jedem Repo. |
 | **Verzögerung der Telemetrie** | Was in den letzten Sekunden verbraucht wurde, ist noch nicht angekommen. | Dieser Rest landet im nächsten Commit; die Summe des Branches stimmt weiterhin. |
-| **Tarifpreis** | Bei einem Abo ist das, was wirklich gezahlt wird, etwas anderes. | Die Zahl dient weiterhin dem Vergleich von Branches, Modellen und Aufgaben. |
 
 ## Die grundlegende Spannung
 
-Wenn Arbeit von einem Menschen erledigt wird, notiert niemand deren Kosten in jedem Commit, weil sie auf andere Weise gemessen werden. Wenn eine KI sie erledigt, lassen sich die Kosten auf den Cent genau messen, und fast niemand tut es. Dieses Muster schließt den Kreis der anderen: Die [Agentur](agencia.md) wählt das günstigste Modell, und die [Schmiede](forja.md) hört auf, es aufzurufen; die Kostenverfolgung ist das, was beweist, dass es sich gelohnt hat.
+Wenn Arbeit von einem Menschen erledigt wird, notiert niemand deren Kosten in jedem Commit, weil sie auf andere Weise gemessen werden. Wenn eine KI sie erledigt, lassen sich die Kosten Token für Token messen, und fast niemand tut es. Dieses Muster schließt den Kreis der anderen: Die [Agentur](agencia.md) wählt das günstigste Modell, und die [Schmiede](forja.md) hört auf, es aufzurufen; die Kostenverfolgung ist das, was beweist, dass es sich gelohnt hat.
 
 ## Siehe auch
 
