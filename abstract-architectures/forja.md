@@ -97,6 +97,7 @@ Es ist dieselbe wie bei der Kristallisation, nur einen Schritt weitergedacht: Do
 ## Siehe auch
 
 - [Kristallisation](cristalizacion.md): das Basismuster; was ein Kristall ist und wie er keimt.
+- [Agentur](agencia.md): Solange eine Aufgabe noch flüssig ist, soll sie das günstigste Modell erledigen, das sie gut macht.
 - [Motivationsumkehr](../motivacion/inversion-de-motivacion.md): dieselbe Grundidee, auf Menschen angewandt.
 
 ---

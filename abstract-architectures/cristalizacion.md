@@ -98,6 +98,7 @@ Dieses Muster nutzt KI, um KI *nicht mehr zu nutzen*. Es ist das Spiegelbild der
 ## Siehe auch
 
 - [Schmiede](forja.md): kristallisieren, ohne vorher zu wissen, welche Stufen es gibt; der Traffic selbst sagt es dir.
+- [Kostenverfolgung](seguimiento-de-costes.md): wissen, ob sich das Kristallisieren gelohnt hat.
 - [Motivationsumkehr](../motivacion/inversion-de-motivacion.md): dieselbe Idee, auf Menschen angewandt.
 
 ---
