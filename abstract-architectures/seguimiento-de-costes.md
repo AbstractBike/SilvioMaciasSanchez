@@ -7,14 +7,14 @@
 | | |
 | --- | --- |
 | **Problema** | Lo que cuesta cada cambio hecho por un agente se sabe al commitear y se pierde después: una semana más tarde nadie sabe qué salió caro ni si mereció la pena. |
-| **Solución** | Apuntarlo en el propio commit, como *trailers* de git: modelo, esfuerzo, tokens por tipo, coste y sesión. |
+| **Solución** | Apuntarlo en el propio commit, como *trailers* de git: modelo, esfuerzo, tokens por tipo y sesión. |
 | **Úsalo para** | Cualquier repositorio donde commitean agentes de IA. |
 | **No lo uses para** | Contar *todo* el gasto: lo que no acaba en commit no aparece (para eso está la telemetría). |
 | **Se mide por** | Que la suma de los trailers de una rama sea exactamente lo que costó la rama. |
 
 ## La idea
 
-Un commit humano cuesta horas; uno de un agente cuesta tokens, y los tokens tienen precio. Ese precio se conoce en el momento de commitear, porque la telemetría del agente lo ha ido contando, y se pierde justo después.
+Un commit humano cuesta horas; uno de un agente cuesta tokens. Cuántos, se sabe en el momento de commitear, porque la telemetría del agente los ha ido contando, y se pierde justo después.
 
 El seguimiento de costes (*token tracking*) lo apunta **donde no se pierde**: en el mensaje del commit. No hace falta ninguna infraestructura nueva para leerlo, porque git ya sabe leer trailers.
 
@@ -26,14 +26,13 @@ Al final del mensaje de cada commit, separados por una línea en blanco:
 Model: claude-opus-5-5
 Effort: medium
 Tokens: 20, 2684, 38678, 751187 del commit
-Cost: 0.51 USD del commit
 Session: 39dfdb59-6748-440d-8d1b-fb089f2fe82d
 ```
 
 Y con un solo comando sabes qué costó cada cambio:
 
 ```bash
-git log --format='%h %(trailers:key=Model,valueonly,separator=%x2C) %(trailers:key=Cost,valueonly)'
+git log --format='%h %(trailers:key=Model,valueonly,separator=%x2C) %(trailers:key=Tokens,valueonly)'
 ```
 
 Todos los commits hechos por agentes en este repositorio llevan estos trailers.
@@ -61,10 +60,11 @@ flowchart LR
 | `Model` | El id exacto del modelo. Si se usaron varios (un subagente, un encargo a la [Agencia](agencia.md)), cada uno abre su propio bloque. | Nunca falta. |
 | `Effort` | El nivel de razonamiento con que corrió la sesión. | Se omite. |
 | `Tokens` | `entrada, salida, escritura de caché, lectura de caché`, en ese orden. | `n/d` |
-| `Cost` | El coste en USD, con la tarifa de cada modelo. | `n/d` |
 | `Session` | El id de la sesión, para volver a la telemetría y a la transcripción. | Se omite. |
 
 Los cuatro tipos de token van por separado porque cuestan distinto y cuentan cosas distintas: mucha lectura de caché es contexto que se arrastra; mucha salida es trabajo escrito.
+
+El coste en dinero no se apunta: el precio por token cambia con el tiempo y, con una suscripción, lo que se paga de verdad es otra cosa. Los tokens, por tipo y por modelo, son el dato que no caduca; quien quiera dólares los calcula después con la tarifa del día.
 
 ### Tres reglas
 
@@ -74,18 +74,18 @@ Los cuatro tipos de token van por separado porque cuestan distinto y cuentan cos
 
 ### Lo que puedes preguntarle al historial
 
-- **Qué costó una rama o un cristal:** la suma de `Cost` de sus commits.
-- **Qué modelo hace qué:** el coste por commit agrupado por `Model`.
+- **Qué costó una rama o un cristal:** la suma de `Tokens` de sus commits.
+- **Qué modelo hace qué:** los tokens por commit agrupados por `Model`.
 - **Si cristalizar salió a cuenta:** lo que costó nuclear el cristal frente a lo que gastaba la tarea antes.
 - **Dónde se va el contexto:** commits con mucha lectura de caché y poca salida son sesiones que arrastran contexto para escribir poco.
 
 ## Cómo implementarlo
 
-1. **Telemetría.** El agente exporta sus métricas (tokens por tipo y coste, por sesión y modelo) a una base de series temporales. Claude Code lo hace con OpenTelemetry.
+1. **Telemetría.** El agente exporta sus métricas (tokens por tipo, por sesión y modelo) a una base de series temporales. Claude Code lo hace con OpenTelemetry.
 2. **Una herramienta que escriba los trailers.** Antes de commitear, busca el commit anterior de la sesión por su trailer `Session`, suma lo gastado desde entonces y lo imprime tal como va en el mensaje. Si no hay datos, escribe `n/d`.
 3. **Una regla en las instrucciones del agente:** "termina cada commit con la salida de la herramienta, tal cual; nunca inventes un valor".
 
-Sin telemetría, la transcripción de la sesión lleva el uso de tokens de cada respuesta y sirve igual para los tokens; el coste, entonces, `n/d`.
+Sin telemetría, la transcripción de la sesión lleva el uso de tokens de cada respuesta y sirve igual.
 
 ## Riesgos y salvaguardas
 
@@ -94,11 +94,10 @@ Sin telemetría, la transcripción de la sesión lleva el uso de tokens de cada 
 | **Cifras inventadas** | Un agente "estima" en vez de medir, y la contabilidad deja de valer. | Los trailers los escribe una herramienta, no el agente; y la regla de `n/d`. |
 | **Doble conteo** | Cada commit lleva el total de la sesión y sumar el historial infla el coste. | Solo lo gastado desde el commit anterior de la sesión, en cualquier repo. |
 | **Retraso de la telemetría** | Lo gastado en los últimos segundos aún no ha llegado. | Ese resto cae en el commit siguiente; la suma de la rama sigue cuadrando. |
-| **Precio de tarifa** | Con una suscripción, lo que se paga de verdad es otra cosa. | La cifra sigue sirviendo para comparar ramas, modelos y tareas. |
 
 ## La tensión de fondo
 
-Cuando el trabajo lo hace una persona, nadie apunta su coste en cada commit porque se mide de otra manera. Cuando lo hace una IA, el coste se puede medir al céntimo y casi nadie lo hace. Este patrón cierra el círculo de los demás: la [Agencia](agencia.md) elige el modelo más barato y la [Forja](forja.md) deja de llamarlo; el seguimiento de costes es lo que demuestra que mereció la pena.
+Cuando el trabajo lo hace una persona, nadie apunta su coste en cada commit porque se mide de otra manera. Cuando lo hace una IA, el coste se puede medir token a token y casi nadie lo hace. Este patrón cierra el círculo de los demás: la [Agencia](agencia.md) elige el modelo más barato y la [Forja](forja.md) deja de llamarlo; el seguimiento de costes es lo que demuestra que mereció la pena.
 
 ## Ver también
 
