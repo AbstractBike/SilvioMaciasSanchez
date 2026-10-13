@@ -1,104 +1,104 @@
-🌐 **Español** · [English](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/en/abstract-architectures/forja.md) · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/de/abstract-architectures/forja.md)
+🌐 [Español](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/es/abstract-architectures/forja.md) · **English** · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/de/abstract-architectures/forja.md)
 
-# Patrón: Forja
+# Pattern: Forge
 
-> **En una frase:** un proxy delante del LLM que descubre qué tareas se repiten y te avisa cuándo cristalizarlas.
+> **In one sentence:** a proxy in front of the LLM that discovers which tasks repeat and tells you when to crystallize them.
 
 | | |
 | --- | --- |
-| **Problema** | Mucho tráfico de LLM, de muchas aplicaciones, y nadie sabe bien qué contiene ni por dónde empezar a [cristalizar](cristalizacion.md). |
-| **Solución** | Un proxy que agrupa las peticiones en tareas, guarda muestras y declara madura una tarea cuando el modelo se repite. |
-| **Úsalo para** | Inventariar y endurecer tráfico de LLM sin tocar a los clientes (solo cambia la URL base). |
-| **No lo uses para** | Etapas que ya conoces (cristalízalas directamente) o tráfico casi todo conversacional o agéntico. |
-| **Se mide por** | El grado de cristalización de todo el tráfico, medido en el propio proxy. |
+| **Problem** | Lots of LLM traffic, from many applications, and nobody really knows what it contains or where to start [crystallizing](cristalizacion.md). |
+| **Solution** | A proxy that groups requests into tasks, stores samples, and declares a task mature when the model repeats itself. |
+| **Use it for** | Taking inventory of LLM traffic and hardening it without touching the clients (only the base URL changes). |
+| **Don't use it for** | Stages you already know (crystallize them directly) or traffic that is mostly conversational or agentic. |
+| **Measured by** | The degree of crystallization of all the traffic, measured in the proxy itself. |
 
-## La idea
+## The idea
 
-La [Cristalización](cristalizacion.md) parte de que sabes cuáles son las etapas de tu pipeline. La forja es la misma idea **sin saberlo de antemano**: un proxy delante del LLM que ve pasar el tráfico, descubre qué tareas se repiten, avisa cuando una está madura para cristalizar y, una vez cristalizada, la atiende él mismo sin llamar al modelo. Los clientes no cambian nada salvo la URL base; el sistema se va endureciendo debajo de ellos.
+[Crystallization](cristalizacion.md) starts from the premise that you know what the stages of your pipeline are. The Forge is the same idea **without knowing it beforehand**: a proxy in front of the LLM that watches the traffic go by, discovers which tasks repeat, tells you when one is mature enough to crystallize and, once it is crystallized, serves it itself without calling the model. Clients change nothing except the base URL; the system hardens beneath them.
 
-## Un ejemplo rápido
+## A quick example
 
-Una empresa tiene una docena de scripts y servicios que llaman al mismo modelo. Pone la forja delante y, al cabo de una semana, la forja informa:
+A company has a dozen scripts and services that call the same model. It puts the Forge in front, and after a week the Forge reports:
 
-- *"Extraer datos de ofertas de empleo"*: 1.244 muestras, el modelo repite la respuesta en 13 campos → **madura**.
-- *"Resumir tickets de soporte"*: el modelo contesta distinto cada vez → **sigue líquida**.
-- Conversaciones del chatbot → **pasan directas**, la forja no las toca.
+- *"Extract data from job postings"*: 1,244 samples, the model repeats the answer across 13 fields → **mature**.
+- *"Summarize support tickets"*: the model answers differently every time → **still liquid**.
+- Chatbot conversations → **pass straight through**, the Forge doesn't touch them.
 
-Alguien nuclea el cristal de la primera tarea, lo revisa y lo commitea. Desde ese momento esas peticiones las responde el proxy, sin tokens.
+Someone nucleates the crystal for the first task, reviews it, and commits it. From that moment on, those requests are answered by the proxy, with zero tokens.
 
-## Caña, no pescado
+## A fishing rod, not a fish
 
-La tentación de un proxy así es **cachear respuestas**: si ya vi esta entrada, devuelvo lo que dijo el LLM. Eso es guardar pescado. Solo acierta con entradas idénticas, crece sin fin y congela por igual los aciertos y los errores del modelo.
+The temptation with a proxy like this is to **cache responses**: if I've already seen this input, I return what the LLM said. That is storing fish. It only hits on identical inputs, grows endlessly, and freezes the model's hits and mistakes alike.
 
-La forja no guarda respuestas para devolverlas. Guarda **muestras** para pedir, cuando haya bastantes, *el programa* que las produce. Lo que atiende después es código: generaliza a entradas que nunca vio, se revisa en un `git diff` y dice cuándo no sabe.
+The Forge doesn't store responses to hand them back. It stores **samples** so that, once there are enough, it can ask for *the program* that produces them. What it serves afterward is code: it generalizes to inputs it has never seen, it can be reviewed in a `git diff`, and it tells you when it doesn't know.
 
-## Qué es una tarea
+## What a task is
 
-No todo el tráfico se puede cristalizar. Una petición es una **tarea** cuando es una función de texto a texto con instrucciones fijas: unas instrucciones de sistema que no cambian (la *plantilla*) aplicadas a una *entrada* que sí cambia, en un solo turno, sin herramientas. Misma plantilla, misma tarea; el cliente puede además ponerle nombre.
+Not all traffic can be crystallized. A request is a **task** when it is a text-to-text function with fixed instructions: system instructions that don't change (the *template*) applied to an *input* that does, in a single turn, with no tools. Same template, same task; the client can also give it a name.
 
-Lo demás —conversaciones, agentes con herramientas, respuestas en streaming— pasa al LLM sin tocar. Es lo abierto por naturaleza, y la forja no intenta cristalizarlo.
+Everything else (conversations, agents with tools, streaming responses) goes through to the LLM untouched. That is what is open-ended by nature, and the Forge doesn't try to crystallize it.
 
-## Cuándo aplicarlo (y cuándo no)
+## When to apply it (and when not to)
 
-Aplícalo cuando hay **mucho tráfico de LLM y nadie sabe bien qué contiene**: varias aplicaciones, scripts y pipelines llamando al mismo modelo, cada una con sus prompts. La forja hace el inventario por ti y te dice por dónde empezar a cristalizar, con datos en lugar de intuición.
+Apply it when there is **a lot of LLM traffic and nobody really knows what it contains**: several applications, scripts, and pipelines calling the same model, each with its own prompts. The Forge takes the inventory for you and tells you where to start crystallizing, with data instead of intuition.
 
-**No** lo uses si ya conoces tus etapas: cristalízalas directamente, sin intermediario. Tampoco tiene sentido si casi todo el tráfico es conversacional o agéntico: la forja lo dejará pasar entero y solo añadirá un salto de red.
+Do **not** use it if you already know your stages: crystallize them directly, with no middleman. It also makes no sense if almost all the traffic is conversational or agentic: the Forge will let it all pass through and will only add a network hop.
 
-## Cómo funciona
+## How it works
 
-Cada tarea recorre el mismo ciclo, y la forja sabe en qué punto está cada una:
+Every task goes through the same cycle, and the Forge knows where each one stands:
 
 ```mermaid
 flowchart LR
-    L["💧 Líquida<br/>LLM + cantera"] -->|"muestras y contrastes estables"| M["🔥 Madura<br/>semilla en el horno"]
-    M -->|"humano revisa y commitea"| N["⚒️ Nucleación"]
-    N --> X["🧊💧 Mixta<br/>cristal + respaldo LLM"]
-    X -->|"casi sin defectos"| C["💎 Cristalina<br/>sin LLM"]
+    L["💧 Liquid<br/>LLM + quarry"] -->|"stable samples and comparisons"| M["🔥 Mature<br/>seed in the kiln"]
+    M -->|"human reviews and commits"| N["⚒️ Nucleation"]
+    N --> X["🧊💧 Mixed<br/>crystal + LLM fallback"]
+    X -->|"almost no defects"| C["💎 Crystalline<br/>no LLM"]
 ```
 
-1. **Líquida.** No hay cristal: la petición va al LLM y el par entrada → salida se guarda en la **cantera**. De vez en cuando la misma petición se hace **dos veces**, en paralelo, para medir si el modelo se repite.
-2. **Madura.** Con suficientes muestras y suficientes contrastes en los que el LLM dio la misma respuesta, la forja declara la tarea madura y deja preparadas su semilla —plantilla y muestras reales— y el prompt de nucleación. Es la regla práctica de la Cristalización convertida en medida: *si al pedirle el resultado dos veces esperas la misma respuesta, esa etapa debería ser un cristal*. Un modelo que se contradice no tiene un método que dar, y esa tarea no madura.
-3. **Nucleación.** Fuera del proxy, nunca en caliente: se le pide al LLM el método, se revisa lo que devuelve, se completa la red cristalina y se commitea. La forja no compila ni carga código generado por su cuenta: el cristal es tuyo desde que se commitea, no antes.
-4. **Mixta.** El cristal entra en la **vitrina** del proxy. Lo que sabe lo responde él —sin tokens, sin red, sin coste—; lo que no, lo declara defecto, cae al LLM y queda en la cantera con su motivo: son las semillas de la siguiente versión.
-5. **Cristalina.** Cuando el cristal lo cubre casi todo, el respaldo se retira. Un defecto ya no llama al LLM: es un error explícito con su motivo. El modelo ha salido del camino.
+1. **Liquid.** There is no crystal: the request goes to the LLM and the input → output pair is stored in the **quarry**. Every so often the same request is made **twice**, in parallel, to measure whether the model repeats itself.
+2. **Mature.** With enough samples and enough comparisons in which the LLM gave the same answer, the Forge declares the task mature and prepares its seed (template and real samples) and the nucleation prompt. It is the rule of thumb of Crystallization turned into a measurement: *if you expect the same answer when you ask for the result twice, that stage should be a crystal*. A model that contradicts itself has no method to give, and that task doesn't mature.
+3. **Nucleation.** Outside the proxy, never live: you ask the LLM for the method, review what it returns, complete the crystal lattice, and commit. The Forge doesn't compile or load generated code on its own: the crystal is yours from the moment it is committed, not before.
+4. **Mixed.** The crystal enters the proxy's **showcase**. What it knows, it answers itself (no tokens, no network, no cost); what it doesn't, it declares a defect, falls back to the LLM, and stays in the quarry with its reason: these are the seeds of the next version.
+5. **Crystalline.** When the crystal covers almost everything, the fallback is retired. A defect no longer calls the LLM: it is an explicit error with its reason. The model has left the path.
 
-Cada respuesta dice quién la dio —cristal, LLM, defecto o paso directo—, así que el **grado de cristalización** de todo el tráfico se mide sin instrumentar a los clientes.
+Every response says who gave it (crystal, LLM, defect, or direct pass-through), so the **degree of crystallization** of all the traffic is measured without instrumenting the clients.
 
-## Cómo implementarlo
+## How to implement it
 
-Las piezas, separadas para que el núcleo sea puro y el transporte intercambiable:
+The pieces, kept separate so the core is pure and the transport is interchangeable:
 
-| Pieza | Qué hace |
+| Piece | What it does |
 | --- | --- |
-| **Tarea** | Identifica plantilla y entrada en cada petición. |
-| **Cantera** | Registro *append-only* de lo que resolvió el LLM, con contrastes y defectos; sobrevive a los reinicios, así que la madurez también. |
-| **Madurez** | La política que decide cuándo una tarea está lista (mínimo de muestras, de contrastes y de estabilidad). |
-| **Horno** | Donde quedan la semilla y el prompt de nucleación de cada tarea madura, esperando a un humano. |
-| **Vitrina** | Los cristales ya revisados, cada uno en fase mixta o cristalina. |
-| **Proxy** | Habla la misma API del LLM por los dos lados; las credenciales pasan tal cual y no se guardan. |
+| **Task** | Identifies template and input in each request. |
+| **Quarry** | *Append-only* log of what the LLM resolved, with comparisons and defects; it survives restarts, so maturity does too. |
+| **Maturity** | The policy that decides when a task is ready (minimum samples, comparisons, and stability). |
+| **Kiln** | Where the seed and the nucleation prompt of each mature task are kept, waiting for a human. |
+| **Showcase** | The already reviewed crystals, each one in mixed or crystalline phase. |
+| **Proxy** | Speaks the same LLM API on both sides; credentials pass through as they are and are not stored. |
 
-El núcleo solo *decide* (cristal, LLM o paso) y *aprende* (registra y evalúa madurez); no habla HTTP ni llama al modelo.
+The core only *decides* (crystal, LLM, or pass-through) and *learns* (records and evaluates maturity); it doesn't speak HTTP or call the model.
 
-Implementación de referencia (proxy OCaml para la Messages API de Anthropic, cantera en GreptimeDB y módulo NixOS): [AbstractBike/cristales — la forja](https://github.com/AbstractBike/cristales/blob/main/doc/forja.md).
+Reference implementation (OCaml proxy for Anthropic's Messages API, quarry in GreptimeDB, and a NixOS module): [AbstractBike/cristales — the Forge](https://github.com/AbstractBike/cristales/blob/main/doc/forja.md).
 
-## Riesgos y salvaguardas
+## Risks and safeguards
 
-| Riesgo | Qué pasa | Salvaguarda |
+| Risk | What happens | Safeguard |
 | --- | --- | --- |
-| **Ser una caché con otro nombre** | Guardar salidas y servirlas porque "ya las vio". | Estructural: la forja solo sirve código commiteado, nunca muestras. |
-| **Nucleación automática** | Cerrar el ciclo sin nadie en medio, cargando en caliente lo que escribió el modelo. Es tentador y es justo el error que el patrón evita. | La revisión humana y el commit son el punto en el que el líquido se vuelve cristal. |
-| **Privacidad de la cantera** | Guarda entradas reales, así que hereda la sensibilidad del tráfico. | Tratarla con el mismo cuidado que el tráfico que la alimenta. |
-| **Coste del contraste** | Medir la estabilidad cuesta llamadas extra. | Contrastar solo una fracción, y solo mientras la tarea es líquida. |
+| **Being a cache by another name** | Storing outputs and serving them because "it's already seen them". | Structural: the Forge only serves committed code, never samples. |
+| **Automatic nucleation** | Closing the loop with nobody in between, hot-loading whatever the model wrote. It's tempting and it is exactly the mistake the pattern avoids. | Human review and the commit are the point where the liquid becomes crystal. |
+| **Quarry privacy** | It stores real inputs, so it inherits the sensitivity of the traffic. | Treat it with the same care as the traffic that feeds it. |
+| **Cost of comparison** | Measuring stability costs extra calls. | Compare only a fraction, and only while the task is liquid. |
 
-## La tensión de fondo
+## The underlying tension
 
-Es la misma que en la Cristalización, llevada un paso más allá: allí decides tú qué sacar del LLM; aquí es el propio tráfico el que te lo dice. La forja es un intermediario cuyo éxito se mide en cuántas veces deja de hacer de intermediario.
+It is the same one as in Crystallization, taken a step further: there you decide what to take out of the LLM; here the traffic itself tells you. The Forge is an intermediary whose success is measured by how often it stops being an intermediary.
 
-## Ver también
+## See also
 
-- [Cristalización](cristalizacion.md): el patrón base; qué es un cristal y cómo se nuclea.
-- [Inversión de Motivación](../motivacion/inversion-de-motivacion.md): la misma idea de fondo, aplicada a las personas.
+- [Crystallization](cristalizacion.md): the base pattern; what a crystal is and how it is nucleated.
+- [Motivation Inversion](../motivacion/inversion-de-motivacion.md): the same underlying idea, applied to people.
 
 ---
 
-© 2026 Silvio Macías Sánchez. Todos los derechos reservados. Libre para investigación y docencia sin ánimo de lucro, citando al autor; para uso comercial, escríbeme a silvio.macias.sanchez@abstract.bike o info@abstractarchitectures.ltd. Ver [COPYRIGHT.md](../COPYRIGHT.md).
+© 2026 Silvio Macías Sánchez. All rights reserved. Free for non-profit research and teaching, citing the author; for commercial use, write to silvio.macias.sanchez@abstract.bike or info@abstractarchitectures.ltd. See [COPYRIGHT.md](../COPYRIGHT.md).

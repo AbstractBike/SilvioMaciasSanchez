@@ -1,105 +1,105 @@
-🌐 **Español** · [English](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/en/abstract-architectures/cristalizacion.md) · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/de/abstract-architectures/cristalizacion.md)
+🌐 [Español](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/es/abstract-architectures/cristalizacion.md) · **English** · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/de/abstract-architectures/cristalizacion.md)
 
-# Patrón: Cristalización
+# Pattern: Crystallization
 
-> **En una frase:** pídele a la IA el programa que resuelve el problema, no la respuesta a cada caso.
+> **In one sentence:** ask the AI for the program that solves the problem, not the answer to each case.
 
 | | |
 | --- | --- |
-| **Problema** | Un LLM en cada llamada es caro, lento, no repite exactamente y no se puede auditar. |
-| **Solución** | Pedirle una vez el método (código con pruebas) y ejecutar ese método en lugar del modelo. |
-| **Úsalo para** | Etapas con estructura estable: extraer, clasificar, normalizar, validar, transformar. |
-| **No lo uses para** | Lo abierto por naturaleza: texto libre, conversación, juicio subjetivo. |
-| **Se mide por** | El grado de cristalización: la fracción de entradas resueltas sin LLM. |
+| **Problem** | An LLM on every call is expensive, slow, doesn't repeat exactly, and can't be audited. |
+| **Solution** | Ask it once for the method (code with tests) and run that method instead of the model. |
+| **Use it for** | Stages with a stable structure: extracting, classifying, normalizing, validating, transforming. |
+| **Don't use it for** | Things that are open by nature: free text, conversation, subjective judgment. |
+| **Measured by** | The degree of crystallization: the fraction of inputs resolved without an LLM. |
 
-## La idea
+## The idea
 
-Enseñar a pescar en vez de dar pescado. En lugar de *"clasifica este correo"*, *"escribe el clasificador de correos"*. Lo que vuelve no es una respuesta, sino un método —un programa, una gramática, una regla, una consulta— que queda escrito y responde solo, sin volver a llamar al modelo.
+Teach someone to fish instead of handing them a fish. Instead of *"classify this email"*, say *"write the email classifier"*. What comes back is not an answer but a method (a program, a grammar, a rule, a query) that is written down and answers on its own, without calling the model again.
 
-Un LLM que se ejecuta en cada llamada es **líquido**: toma la forma de cada entrada, cuesta en cada uso, no repite exactamente y no se puede auditar. Lo que produce cuando le pides el método es **cristal**: una estructura fija, determinista, barata, versionada y con pruebas. La IA deja de ser el intérprete que ejecuta tu problema y se convierte en el compilador que te escribe el programa que lo ejecuta.
+An LLM that runs on every call is **liquid**: it takes the shape of each input, it costs something on every use, it doesn't repeat exactly, and it can't be audited. What it produces when you ask for the method is **crystal**: a fixed, deterministic, cheap structure that is versioned and tested. The AI stops being the interpreter that executes your problem and becomes the compiler that writes you the program that executes it.
 
-## Un ejemplo rápido
+## A quick example
 
-Una tienda recibe 10.000 direcciones al día escritas de cualquier manera y necesita extraer código postal, ciudad y país.
+A shop receives 10,000 addresses a day, written in all sorts of ways, and needs to extract postal code, city, and country.
 
-| Líquido | Cristal |
+| Liquid | Crystal |
 | --- | --- |
-| Cada dirección se manda al LLM: 10.000 llamadas al día. | Se le pasan al LLM 200 direcciones reales y se le pide *el parser*. |
-| Coste, latencia y alguna respuesta distinta cada vez. | Una función con pruebas, en el repositorio, que responde en microsegundos. |
-| Si se equivoca, nadie se entera. | Lo que no sabe resolver lo marca como *defecto* y va al LLM; esos casos alimentan la siguiente versión. |
+| Every address is sent to the LLM: 10,000 calls a day. | You give the LLM 200 real addresses and ask for *the parser*. |
+| Cost, latency, and occasionally a different answer each time. | A function with tests, in the repository, that responds in microseconds. |
+| If it gets something wrong, nobody notices. | Whatever it can't resolve is flagged as a *defect* and goes to the LLM; those cases feed the next version. |
 
-## Las pipelines de IA se cristalizan
+## AI pipelines crystallize
 
-Una pipeline de IA es una cadena de etapas que llaman a un modelo: clasificar, extraer, normalizar, enrutar, resumir. Casi ninguna necesita inteligencia en cada ejecución; la necesitó **una vez**, para entender el problema. Cristalizar la pipeline es sacar al LLM del camino de ejecución, etapa a etapa, pasando por tres fases:
+An AI pipeline is a chain of stages that call a model: classify, extract, normalize, route, summarize. Almost none of them need intelligence on every run; they needed it **once**, to understand the problem. Crystallizing the pipeline means taking the LLM out of the execution path, stage by stage, going through three phases:
 
 ```mermaid
 flowchart LR
-    L["💧 Líquida<br/>todo va al LLM"] --> M["🧊💧 Mixta<br/>el cristal atiende lo que sabe"]
-    M --> C["💎 Cristalina<br/>el LLM ya no se ejecuta"]
-    C -. "el dominio cambia (fusión)" .-> L
+    L["💧 Liquid<br/>everything goes to the LLM"] --> M["🧊💧 Mixed<br/>the crystal handles what it knows"]
+    M --> C["💎 Crystalline<br/>the LLM no longer runs"]
+    C -. "the domain changes (melting)" .-> L
 ```
 
-- **Líquida.** La etapa llama al LLM en cada entrada. Así nace todo, y está bien: es la forma más rápida de saber si el problema tiene solución. Desde el primer día se registra cada llamada.
-- **Mixta.** Un cristal atiende lo que sabe; lo que no sabe lo declara como *defecto*, cae al LLM y queda registrado.
-- **Cristalina.** El cristal lo cubre todo. El LLM ya no se ejecuta; solo se le convoca para *recristalizar* cuando el dominio cambia.
+- **Liquid.** The stage calls the LLM on every input. Everything starts this way, and that's fine: it's the fastest way to find out whether the problem has a solution. Every call is logged from day one.
+- **Mixed.** A crystal handles what it knows; whatever it doesn't know it declares as a *defect*, falls back to the LLM, and is recorded.
+- **Crystalline.** The crystal covers everything. The LLM no longer runs; it is only called to *recrystallize* when the domain changes.
 
-La pipeline aprende, pero lo aprendido queda escrito como código, no como pesos ni como contexto.
+The pipeline learns, but what it learns is written down as code, not as weights or context.
 
-## Cuándo aplicarlo (y cuándo no)
+## When to apply it (and when not to)
 
-Aplícalo cuando la etapa tiene **estructura estable**: extraer campos, clasificar en un conjunto cerrado, normalizar formatos, validar, transformar entre esquemas.
+Apply it when the stage has a **stable structure**: extracting fields, classifying into a closed set, normalizing formats, validating, transforming between schemas.
 
-> **Regla práctica:** si al pedirle el resultado a la IA dos veces esperas la misma respuesta, esa etapa debería ser un cristal.
+> **Rule of thumb:** if you ask the AI for the result twice and expect the same answer, that stage should be a crystal.
 
-**No** lo fuerces en lo que es abierto por naturaleza: redactar texto libre, conversar, juzgar calidad subjetiva. Aun así, suele cristalizar *una parte* —la plantilla del texto, la rúbrica del juicio, el árbol de la conversación— y el líquido queda acotado al hueco que de verdad lo necesita.
+**Don't** force it onto things that are open by nature: writing free text, holding a conversation, judging subjective quality. Even so, *part* of them can usually crystallize (the text template, the judgment rubric, the conversation tree), and the liquid part stays confined to the gap that truly needs it.
 
-## Cómo funciona
+## How it works
 
-El ciclo tiene nombre propio en cada paso:
+The cycle has a specific name at each step:
 
-1. **Semilla.** Lo mínimo para que crezca un cristal: el problema en una frase, ejemplos reales de entrada y salida (incluidos los raros), las invariantes que toda salida debe cumplir y lo que debe quedar *fuera de dominio*.
-2. **Nucleación.** Se le pide al LLM el método, no la respuesta. Lo que vuelve es código, pruebas y la lista explícita de casos que el método no cubre. Si no puede dar un método general, la etapa no está madura: sigue líquida y se recogen más ejemplos.
-3. **Red cristalina.** Las pruebas e invariantes que definen la estructura. Un cristal sin red es solo código generado; con red, es una pieza en la que se puede confiar. La red solo crece: cada versión del cristal pasa la red entera de la anterior.
-4. **Crecimiento.** Los defectos registrados en fase mixta se convierten en semilla de la siguiente nucleación. Así sube el **grado de cristalización** —la fracción de entradas resueltas sin LLM—, que es la métrica que manda.
-5. **Fusión.** Si el grado cae de golpe, el dominio ha cambiado. La etapa vuelve a líquida sin dramas; la semilla y la procedencia antiguas siguen en el repositorio para la próxima nucleación.
+1. **Seed.** The minimum needed for a crystal to grow: the problem in one sentence, real examples of input and output (including the rare ones), the invariants every output must satisfy, and what must remain *out of domain*.
+2. **Nucleation.** The LLM is asked for the method, not the answer. What comes back is code, tests, and an explicit list of the cases the method doesn't cover. If it can't give a general method, the stage isn't mature: it stays liquid and more examples are gathered.
+3. **Crystal lattice.** The tests and invariants that define the structure. A crystal without a lattice is just generated code; with one, it's a piece you can trust. The lattice only grows: each version of the crystal must pass the entire lattice of the previous one.
+4. **Growth.** Defects recorded in the mixed phase become the seed for the next nucleation. This is how the **degree of crystallization** rises (the fraction of inputs resolved without an LLM), which is the metric that matters.
+5. **Melting.** If the degree drops suddenly, the domain has changed. The stage goes back to liquid without drama; the old seed and provenance remain in the repository for the next nucleation.
 
-### Glosario
+### Glossary
 
-| Término | Qué significa |
+| Term | What it means |
 | --- | --- |
-| Líquido | El LLM ejecutándose en cada entrada. |
-| Cristal | El método que escribió el LLM: código determinista, versionado y con pruebas. |
-| Defecto | Una entrada que el cristal reconoce que no sabe resolver. Mejor un defecto que una respuesta inventada. |
-| Semilla | Problema, ejemplos, invariantes y límites a partir de los que se pide el cristal. |
-| Nucleación | El momento en que se le pide al LLM el método. |
-| Red cristalina | Las pruebas e invariantes que el cristal debe cumplir siempre. |
-| Grado de cristalización | La fracción de entradas resueltas sin llamar al LLM. |
-| Fusión | Volver a líquido porque el dominio ha cambiado. |
+| Liquid | The LLM running on every input. |
+| Crystal | The method the LLM wrote: deterministic code, versioned and tested. |
+| Defect | An input the crystal recognizes it can't resolve. A defect is better than an invented answer. |
+| Seed | The problem, examples, invariants, and limits from which the crystal is requested. |
+| Nucleation | The moment the LLM is asked for the method. |
+| Crystal lattice | The tests and invariants the crystal must always satisfy. |
+| Degree of crystallization | The fraction of inputs resolved without calling the LLM. |
+| Melting | Going back to liquid because the domain has changed. |
 
-## Cómo implementarlo
+## How to implement it
 
-La instrucción núcleo de la nucleación sería algo así:
+The core instruction for nucleation would be something like this:
 
-> No quiero que resuelvas estos casos. Quiero el programa que los resuelve todos, para no tener que volver a preguntarte. Entrega una función pura —sin red, reloj ni aleatoriedad— que para cada entrada devuelva un resultado o un defecto con su motivo; prefiero un defecto a una respuesta inventada. Incluye pruebas que cubran todos los ejemplos y comprueben las invariantes, y la lista de casos que tu método no cubre. Si el problema no admite un método general, dilo y explica qué ejemplos faltarían; no me des un programa que en el fondo sea una tabla de los ejemplos.
+> I don't want you to solve these cases. I want the program that solves all of them, so I don't have to ask you again. Deliver a pure function (no network, clock, or randomness) that, for each input, returns either a result or a defect with its reason; I'd rather have a defect than an invented answer. Include tests that cover all the examples and check the invariants, and the list of cases your method doesn't cover. If the problem doesn't admit a general method, say so and explain which examples would be missing; don't give me a program that is basically a table of the examples.
 
-Implementación de referencia (librería OCaml de etapas líquidas, mixtas y cristalinas componibles, protocolo completo y un cristal de ejemplo): [AbstractBike/cristales](https://github.com/AbstractBike/cristales).
+Reference implementation (an OCaml library of composable liquid, mixed, and crystalline stages, the full protocol, and an example crystal): [AbstractBike/cristales](https://github.com/AbstractBike/cristales).
 
-## Riesgos y salvaguardas
+## Risks and safeguards
 
-| Riesgo | Qué pasa | Salvaguarda |
+| Risk | What happens | Safeguard |
 | --- | --- | --- |
-| **Impureza** | El cristal trata *mal* una entrada sin darse cuenta, en lugar de declararla defecto. Es peor que el LLM: da una respuesta equivocada con aspecto de certeza. | La red: invariantes comprobadas sobre todo el registro, no solo sobre los ejemplos, y contraste con lo que respondía el líquido antes de solidificar. |
-| **Sobreajuste a la semilla** | Un "método" que en realidad memoriza los ejemplos. | Exigir invariantes generales y probar con entradas que no estaban en la semilla. |
+| **Impurity** | The crystal mishandles an input without realizing it, instead of declaring it a defect. It's worse than the LLM: it gives a wrong answer that looks certain. | The lattice: invariants checked across the whole record, not just the examples, and cross-checking against what the liquid answered before solidifying. |
+| **Overfitting to the seed** | A "method" that in fact memorizes the examples. | Require general invariants and test with inputs that were not in the seed. |
 
-## La tensión de fondo
+## The underlying tension
 
-Este patrón usa la IA para *dejar de usar* la IA. Es el reflejo de la [Inversión de Motivación](../motivacion/inversion-de-motivacion.md), pero aplicado a las máquinas: allí la IA retiene la solución para que tú actúes; aquí le pides el método para que el sistema actúe solo. En ambos casos el objetivo no es la respuesta, sino la capacidad que queda cuando la IA se retira.
+This pattern uses AI to *stop using* AI. It mirrors [Motivation Inversion](../motivacion/inversion-de-motivacion.md), but applied to machines: there, the AI withholds the solution so that you act; here, you ask it for the method so that the system acts on its own. In both cases the goal is not the answer, but the capability that remains once the AI steps back.
 
-## Ver también
+## See also
 
-- [Forja](forja.md): cristalizar sin saber de antemano qué etapas hay; el propio tráfico te lo dice.
-- [Inversión de Motivación](../motivacion/inversion-de-motivacion.md): la misma idea aplicada a las personas.
+- [Forge](forja.md): crystallizing without knowing in advance which stages exist; the traffic itself tells you.
+- [Motivation Inversion](../motivacion/inversion-de-motivacion.md): the same idea applied to people.
 
 ---
 
-© 2026 Silvio Macías Sánchez. Todos los derechos reservados. Libre para investigación y docencia sin ánimo de lucro, citando al autor; para uso comercial, escríbeme a silvio.macias.sanchez@abstract.bike o info@abstractarchitectures.ltd. Ver [COPYRIGHT.md](../COPYRIGHT.md).
+© 2026 Silvio Macías Sánchez. All rights reserved. Free for non-profit research and teaching, citing the author; for commercial use, write to silvio.macias.sanchez@abstract.bike or info@abstractarchitectures.ltd. See [COPYRIGHT.md](../COPYRIGHT.md).

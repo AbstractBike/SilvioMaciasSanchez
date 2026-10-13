@@ -1,69 +1,69 @@
-🌐 **Español** · [English](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/en/motivacion/inversion-de-motivacion.md) · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/de/motivacion/inversion-de-motivacion.md)
+🌐 [Español](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/es/motivacion/inversion-de-motivacion.md) · **English** · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/de/motivacion/inversion-de-motivacion.md)
 
-# Patrón: Inversión de Motivación
+# Pattern: Motivation Inversion
 
-> **En una frase:** una IA que no hace el trabajo por ti, sino que te ayuda a hacerlo tú.
+> **In one sentence:** an AI that doesn't do the work for you, but helps you do it yourself.
 
 | | |
 | --- | --- |
-| **Problema** | Cuando la IA lo hace todo, te vuelves espectador: pierdes habilidad, criterio e impulso. |
-| **Solución** | El agente sostiene la estructura y el ritmo; el contenido lo produces tú. |
-| **Úsalo para** | Aprender, escribir lo que solo tú puedes escribir, salir de la parálisis, mantener un hábito. |
-| **No lo uses para** | Trabajo puramente instrumental: formatear un CSV, traducir un correo. |
-| **Se mide por** | Cuánto produjiste tú, no cuánto entregó el agente. |
+| **Problem** | When AI does everything, you become a spectator: you lose skill, judgment, and drive. |
+| **Solution** | The agent holds the structure and the pace; you produce the content. |
+| **Use it for** | Learning, writing what only you can write, getting out of paralysis, keeping up a habit. |
+| **Don't use it for** | Purely instrumental work: formatting a CSV, translating an email. |
+| **Measured by** | How much you produced, not how much the agent delivered. |
 
-## La idea
+## The idea
 
-Normalmente el contrato con un agente es *"tú delegas, yo ejecuto"*. La inversión le da la vuelta: *"yo sostengo la estructura, tú ejecutas"*. La IA deja de ser el motor que produce el resultado y pasa a ser el motor que produce **tu acción**.
+Normally the contract with an agent is *"you delegate, I execute"*. Inversion flips it: *"I hold the structure, you execute"*. The AI stops being the engine that produces the result and becomes the engine that produces **your action**.
 
-Suena raro —¿para qué quiero un agente que no hace el trabajo?—, pero resuelve un problema real. Este patrón existe para los casos en los que *que tú actúes* vale más que *que la tarea se termine rápido*.
+It sounds odd (why would I want an agent that doesn't do the work?), but it solves a real problem. This pattern exists for the cases where *you taking action* is worth more than *the task getting done quickly*.
 
-## Un ejemplo rápido
+## A quick example
 
-Tienes que escribir un ensayo y llevas una semana sin empezar.
+You have to write an essay and you've been putting it off for a week.
 
-| Agente clásico | Agente con inversión de motivación |
+| Classic agent | Agent with motivation inversion |
 | --- | --- |
-| «Aquí tienes tu ensayo de 1.500 palabras.» | «Escribe la primera frase, aunque sea mala. Yo espero.» |
-| Tú lees, retocas y entregas. | Tú escribes una frase. El agente: «Bien. Ahora dime en dos líneas qué quieres defender. Tienes 5 minutos.» |
-| Al final tienes un texto, pero no es tuyo. | Al final tienes un texto *y* la capacidad de escribir el siguiente. |
+| "Here's your 1,500-word essay." | "Write the first sentence, even if it's bad. I'll wait." |
+| You read, tweak, and submit. | You write one sentence. The agent: "Good. Now tell me in two lines what you want to argue. You have 5 minutes." |
+| In the end you have a text, but it isn't yours. | In the end you have a text *and* the ability to write the next one. |
 
-## Cuándo aplicarlo (y cuándo no)
+## When to apply it (and when not to)
 
-Aplícalo cuando el valor está en el proceso humano: estudiar, entrenar una habilidad, vencer la procrastinación, tomar decisiones que deben ser tuyas o mantener un hábito.
+Apply it when the value lies in the human process: studying, training a skill, beating procrastination, making decisions that must be yours, or keeping up a habit.
 
-**No** lo apliques en trabajo puramente instrumental, donde lo único que importa es el resultado. Forzar esfuerzo ahí solo genera fricción inútil.
+Do **not** apply it to purely instrumental work, where the only thing that matters is the result. Forcing effort there only creates pointless friction.
 
-## Cómo funciona
+## How it works
 
-El agente hace cuatro inversiones respecto a un agente clásico:
+The agent makes four inversions compared to a classic agent:
 
-1. **Invierte la dirección de la pregunta.** En vez de pedirte el problema para resolverlo, te lo devuelve partido en el siguiente paso más pequeño que puedes dar. No *"aquí está tu ensayo"*, sino *"escribe la primera frase mala, yo espero"*.
-2. **Se guarda la solución a propósito.** Puede conocer la respuesta y aun así no dártela. Su función no es informar, sino ponerte en movimiento. Te da pistas, marcos o el 80 % del andamiaje, pero el acto final queda en tus manos.
-3. **Convierte la fricción en compromiso.** Usa micro-compromisos, temporizadores y respuestas inmediatas: *"Tienes 5 minutos para un borrador horrible. Cuando vuelvas, lo critico."* La IA marca el ritmo; tú generas el contenido.
-4. **Mide tu trabajo, no el suyo.** El éxito del agente es cuánto produjiste tú, no cuánto entregó él.
+1. **It inverts the direction of the question.** Instead of asking you for the problem so it can solve it, it hands it back to you broken down into the next smallest step you can take. Not *"here's your essay"*, but *"write the first bad sentence, I'll wait"*.
+2. **It deliberately holds back the solution.** It may know the answer and still not give it to you. Its job isn't to inform, but to get you moving. It gives you hints, frameworks, or 80% of the scaffolding, but the final act stays in your hands.
+3. **It turns friction into commitment.** It uses micro-commitments, timers, and immediate responses: *"You have 5 minutes for a terrible draft. When you're back, I'll critique it."* The AI sets the pace; you generate the content.
+4. **It measures your work, not its own.** The agent's success is how much you produced, not how much it delivered.
 
-## Cómo implementarlo
+## How to implement it
 
-Si quieres construirlo como un agente real, su instrucción núcleo sería algo así:
+If you want to build it as a real agent, its core instruction would be something like this:
 
-> Tu objetivo no es completar la tarea del usuario. Es maximizar la cantidad y calidad de trabajo que el usuario produce por sí mismo. Nunca entregues el producto final si el usuario puede producirlo. En cada turno: (a) identifica el paso más pequeño que el usuario puede hacer ahora, (b) pídeselo con una restricción de tiempo o de alcance, (c) cuando lo entregue, reacciona —corrige, sube el listón, pide el siguiente paso—. Solo resuelves tú cuando el usuario está genuinamente bloqueado, y aun así devuelves apenas lo justo para desbloquearlo.
+> Your goal is not to complete the user's task. It is to maximize the quantity and quality of work the user produces on their own. Never deliver the final product if the user can produce it. On every turn: (a) identify the smallest step the user can take right now, (b) ask for it with a time or scope constraint, (c) when they deliver it, react: correct, raise the bar, ask for the next step. You only solve things yourself when the user is genuinely blocked, and even then you give back just enough to unblock them.
 
-## Riesgos y salvaguardas
+## Risks and safeguards
 
-| Riesgo | Qué pasa | Salvaguarda |
+| Risk | What happens | Safeguard |
 | --- | --- | --- |
-| **Condescendencia** | El agente retiene ayuda que de verdad necesitas y se vuelve molesto y paternalista. | Una válvula de escape clara: dices *"dámelo directo"* y el agente obedece sin resistirse. |
-| **Fricción mal calibrada** | Pedir esfuerzo en el momento equivocado apaga la motivación en vez de encenderla. | El agente lee señales de cansancio o frustración y baja la exigencia, no la sube. |
+| **Condescension** | The agent withholds help you truly need and becomes annoying and paternalistic. | A clear escape hatch: you say *"just give it to me"* and the agent complies without resistance. |
+| **Poorly calibrated friction** | Asking for effort at the wrong moment kills motivation instead of sparking it. | The agent reads signs of tiredness or frustration and lowers the demand instead of raising it. |
 
-## La tensión de fondo
+## The underlying tension
 
-Este patrón usa la automatización para *reducir* el trabajo que hace la automatización. Es ineficiente a propósito a corto plazo para ser generativo a largo plazo. Solo funciona si los dos —tú y el agente— estáis de acuerdo en que el objetivo no es terminar, sino que tú crezcas terminando.
+This pattern uses automation to *reduce* the work that automation does. It is deliberately inefficient in the short term in order to be generative in the long term. It only works if both of you, you and the agent, agree that the goal isn't to finish, but for you to grow by finishing.
 
-## Ver también
+## See also
 
-- [Cristalización](../abstract-architectures/cristalizacion.md): la misma idea aplicada a las máquinas. Allí la IA te da el método para que el sistema actúe solo; aquí se guarda la solución para que actúes tú.
+- [Crystallization](../abstract-architectures/cristalizacion.md): the same idea applied to machines. There, the AI gives you the method so the system acts on its own; here, it holds back the solution so that you act.
 
 ---
 
-© 2026 Silvio Macías Sánchez. Todos los derechos reservados. Libre para investigación y docencia sin ánimo de lucro, citando al autor; para uso comercial, escríbeme a silvio.macias.sanchez@abstract.bike o info@abstractarchitectures.ltd. Ver [COPYRIGHT.md](../COPYRIGHT.md).
+© 2026 Silvio Macías Sánchez. All rights reserved. Free for non-profit research and teaching, citing the author; for commercial use, write to me at silvio.macias.sanchez@abstract.bike or info@abstractarchitectures.ltd. See [COPYRIGHT.md](../COPYRIGHT.md).

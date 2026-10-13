@@ -1,66 +1,66 @@
-🌐 **Español** · [English](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/en) · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/de)
+🌐 [Español](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/es) · **English** · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/de)
 
 # Silvio Macías Sánchez
 
-Patrones para trabajar con inteligencia artificial sin perder lo que importa: tu capacidad de actuar y el control de tus sistemas. También algún diseño de sistemas de almacenamiento.
+Patterns for working with artificial intelligence without losing what matters: your ability to act and control over your systems. Plus a few storage system designs.
 
-Cada patrón se lee en unos minutos y empieza con un resumen de una frase y una ficha rápida. Si solo tienes un momento, lee eso.
+Each pattern takes a few minutes to read and starts with a one-sentence summary and a quick fact sheet. If you only have a moment, read that.
 
-## Los patrones
+## The patterns
 
-| Patrón | En una frase | Lectura |
+| Pattern | In one sentence | Reading time |
 | --- | --- | --- |
-| [**Inversión de Motivación**](motivacion/inversion-de-motivacion.md) | Una IA que no hace el trabajo por ti, sino que te ayuda a hacerlo tú. | 5 min |
-| [**Cristalización**](abstract-architectures/cristalizacion.md) | Pídele a la IA el programa que resuelve el problema, no la respuesta a cada caso. | 6 min |
-| [**Forja**](abstract-architectures/forja.md) | Un proxy delante del LLM que descubre qué tareas se repiten y te avisa cuándo cristalizarlas. | 7 min |
+| [**Motivation Inversion**](motivacion/inversion-de-motivacion.md) | An AI that doesn't do the work for you, but helps you do it yourself. | 5 min |
+| [**Crystallization**](abstract-architectures/cristalizacion.md) | Ask the AI for the program that solves the problem, not for the answer to each case. | 6 min |
+| [**Forge**](abstract-architectures/forja.md) | A proxy in front of the LLM that discovers which tasks repeat and tells you when to crystallize them. | 7 min |
 
-### Cómo se relacionan
+### How they relate
 
-Los tres comparten una misma idea: **el objetivo no es la respuesta, sino la capacidad que queda cuando la IA se retira.**
+All three share one idea: **the goal is not the answer, but the capability that remains once the AI steps back.**
 
 ```mermaid
 flowchart LR
-    IM["🧠 Inversión de Motivación<br/><i>para personas</i>"] -. "misma idea" .- CR["💎 Cristalización<br/><i>para sistemas</i>"]
-    CR -->|"sin saber qué etapas hay"| FO["⚒️ Forja<br/><i>para tráfico de LLM</i>"]
+    IM["🧠 Motivation Inversion<br/><i>for people</i>"] -. "same idea" .- CR["💎 Crystallization<br/><i>for systems</i>"]
+    CR -->|"without knowing which stages exist"| FO["⚒️ Forge<br/><i>for LLM traffic</i>"]
 ```
 
-- **¿Usas la IA para aprender o crear?** Empieza por la [Inversión de Motivación](motivacion/inversion-de-motivacion.md).
-- **¿Tienes una pipeline que llama a un LLM en cada paso?** Empieza por la [Cristalización](abstract-architectures/cristalizacion.md).
-- **¿Tienes mucho tráfico de LLM y no sabes qué contiene?** Empieza por la [Forja](abstract-architectures/forja.md).
+- **Do you use AI to learn or create?** Start with [Motivation Inversion](motivacion/inversion-de-motivacion.md).
+- **Do you have a pipeline that calls an LLM at every step?** Start with [Crystallization](abstract-architectures/cristalizacion.md).
+- **Do you have a lot of LLM traffic and don't know what's in it?** Start with the [Forge](abstract-architectures/forja.md).
 
-### Cómo está escrito cada patrón
+### How each pattern is written
 
-Todos siguen la misma estructura, para que sepas dónde buscar:
+All of them follow the same structure, so you know where to look:
 
-1. **En una frase** y una **ficha**: problema, solución, cuándo usarlo y cómo se mide.
-2. **La idea** y **un ejemplo rápido**.
-3. **Cuándo aplicarlo (y cuándo no).**
-4. **Cómo funciona** y **cómo implementarlo**.
-5. **Riesgos y salvaguardas.**
-6. **Ver también**.
+1. **In one sentence** and a **fact sheet**: problem, solution, when to use it, and how it's measured.
+2. **The idea** and **a quick example**.
+3. **When to apply it (and when not to).**
+4. **How it works** and **how to implement it.**
+5. **Risks and safeguards.**
+6. **See also**.
 
-## Sistemas de ficheros
+## File systems
 
-| Diseño | En una frase |
+| Design | In one sentence |
 | --- | --- |
-| [**gefs + FDP**](sistemas-de-ficheros/gefs-fdp.md) | Que el sistema de ficheros de 9front le diga al SSD qué bloques mueren juntos, para que la amplificación de escritura baje a ≈1 sin cambiar el formato en disco. |
+| [**gefs + FDP**](sistemas-de-ficheros/gefs-fdp.md) | Let the 9front file system tell the SSD which blocks die together, so write amplification drops to ≈1 without changing the on-disk format. |
 
-## Idiomas
+## Languages
 
-El contenido está en tres idiomas, cada uno en su rama, con los mismos ficheros en las mismas rutas:
+The content is available in three languages, each on its own branch, with the same files at the same paths:
 
-| Rama | Idioma |
+| Branch | Language |
 | --- | --- |
 | [`es`](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/es) | Español (original) |
 | [`en`](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/en) | English |
 | [`de`](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/de) | Deutsch |
 
-El español es la versión original; si una traducción y el original no coinciden, vale el original.
+Spanish is the original version; if a translation and the original disagree, the original prevails.
 
-## Uso y derechos
+## Use and rights
 
-Libre para investigación y docencia sin ánimo de lucro, citando al autor. Para uso comercial, escríbeme —soy muy amigable—: silvio.macias.sanchez@abstract.bike o info@abstractarchitectures.ltd. Detalles en [COPYRIGHT.md](COPYRIGHT.md).
+Free for non-profit research and teaching, citing the author. For commercial use, write to me (I'm very friendly): silvio.macias.sanchez@abstract.bike or info@abstractarchitectures.ltd. Details in [COPYRIGHT.md](COPYRIGHT.md).
 
 ---
 
-© 2026 Silvio Macías Sánchez. Todos los derechos reservados.
+© 2026 Silvio Macías Sánchez. All rights reserved.
