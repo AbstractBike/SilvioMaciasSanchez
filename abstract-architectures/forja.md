@@ -97,6 +97,7 @@ It is the same one as in Crystallization, taken a step further: there you decide
 ## See also
 
 - [Crystallization](cristalizacion.md): the base pattern; what a crystal is and how it is nucleated.
+- [Agency](agencia.md): while a task is still liquid, let the cheapest model that does it well handle it.
 - [Motivation Inversion](../motivacion/inversion-de-motivacion.md): the same underlying idea, applied to people.
 
 ---

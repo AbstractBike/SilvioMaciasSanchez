@@ -13,20 +13,30 @@ Each pattern takes a few minutes to read and starts with a one-sentence summary 
 | [**Motivation Inversion**](motivacion/inversion-de-motivacion.md) | An AI that doesn't do the work for you, but helps you do it yourself. | 5 min |
 | [**Crystallization**](abstract-architectures/cristalizacion.md) | Ask the AI for the program that solves the problem, not for the answer to each case. | 6 min |
 | [**Forge**](abstract-architectures/forja.md) | A proxy in front of the LLM that discovers which tasks repeat and tells you when to crystallize them. | 7 min |
+| [**Agency**](abstract-architectures/agencia.md) | Agents that learn, job by job, which is the cheapest model that does its work well. | 6 min |
+| [**Cost Tracking**](abstract-architectures/seguimiento-de-costes.md) | Every commit from an AI says which model wrote it and how much it cost. | 6 min |
+| [**Honey Keys**](abstract-architectures/llaves-de-miel.md) | A real, harmless key where it should never show up; if it does, whoever issued it alerts you. | 7 min |
 
 ### How they relate
 
-All three share one idea: **the goal is not the answer, but the capability that remains once the AI steps back.**
+They share one idea: **the goal is not the answer, but the capability that remains once the AI steps back.** And they chain together: first the cheapest model that knows how, then no model at all, and the bill recorded so you know whether it was worth it.
 
 ```mermaid
 flowchart LR
     IM["🧠 Motivation Inversion<br/><i>for people</i>"] -. "same idea" .- CR["💎 Crystallization<br/><i>for systems</i>"]
     CR -->|"without knowing which stages exist"| FO["⚒️ Forge<br/><i>for LLM traffic</i>"]
+    AG["🤖 Agency<br/><i>the cheapest model</i>"] -->|"the task matures"| FO
+    SC["🧾 Cost Tracking<br/><i>was it worth it?</i>"] -.-> AG
+    SC -.-> FO
+    LM["🍯 Honey Keys<br/><i>has it leaked?</i>"] -. "watches its stores" .-> FO
 ```
 
 - **Do you use AI to learn or create?** Start with [Motivation Inversion](motivacion/inversion-de-motivacion.md).
 - **Do you have a pipeline that calls an LLM at every step?** Start with [Crystallization](abstract-architectures/cristalizacion.md).
 - **Do you have a lot of LLM traffic and don't know what's in it?** Start with the [Forge](abstract-architectures/forja.md).
+- **Do you repeat the same prompt over and over?** Start with the [Agency](abstract-architectures/agencia.md).
+- **Are agents committing to your repos and you don't know how much they cost?** Start with [Cost Tracking](abstract-architectures/seguimiento-de-costes.md).
+- **Are you worried your agents' context might leak?** Start with [Honey Keys](abstract-architectures/llaves-de-miel.md).
 
 ### How each pattern is written
 

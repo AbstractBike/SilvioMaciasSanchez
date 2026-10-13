@@ -98,6 +98,7 @@ This pattern uses AI to *stop using* AI. It mirrors [Motivation Inversion](../mo
 ## See also
 
 - [Forge](forja.md): crystallizing without knowing in advance which stages exist; the traffic itself tells you.
+- [Cost Tracking](seguimiento-de-costes.md): knowing whether crystallizing paid off.
 - [Motivation Inversion](../motivacion/inversion-de-motivacion.md): the same idea applied to people.
 
 ---
