@@ -1,7 +1,7 @@
 {
   "name": "silvio-macias-sanchez",
   "version": "0.0.0",
-  "description": "Investigación y documentación sobre patrones de IA, motivación y sistemas de conocimiento",
+  "description": "Patrones para trabajar con IA: Inversión de Motivación, Cristalización y Forja (es · en · de)",
   "author": "Silvio Macías Sánchez",
   "license": "SEE LICENSE IN COPYRIGHT.md",
   "private": true,
@@ -13,6 +13,8 @@
     "ai",
     "motivation",
     "patterns",
-    "research"
+    "research",
+    "crystallization",
+    "llm"
   ]
 }

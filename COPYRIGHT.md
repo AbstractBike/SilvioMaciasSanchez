@@ -2,6 +2,7 @@
 
 © 2026 Silvio Macías Sánchez. **Todos los derechos reservados.**
 © 2026 Silvio Macías Sánchez. **All rights reserved.**
+© 2026 Silvio Macías Sánchez. **Alle Rechte vorbehalten.**
 
 Primera publicación: 11 de octubre de 2026. Las fechas y huellas de los commits
 de este repositorio sirven como prueba de la autoría y de la fecha de creación.
@@ -91,3 +92,51 @@ corpora. Scientific research remains permitted as stated above.
 
 **Moral rights.** The author retains the right to be identified as the author
 and to object to any distortion of the work.
+
+## Deutsch
+
+*Übersetzung zur Information. Maßgeblich ist die spanische Fassung.*
+
+### Forschung: gern
+
+Sie dürfen diese Inhalte **für nicht gewinnorientierte Forschung, Lehre und
+Studium** nutzen: lesen, studieren, zitieren, Auszüge in Artikeln,
+Abschlussarbeiten und Vorträgen wiedergeben und mit dem Code und den Mustern in
+Forschungsarbeiten experimentieren. Ich bitte nur um Quellenangabe:
+*Silvio Macías Sánchez, https://github.com/AbstractBike*.
+
+### Kommerzielle Nutzung: schreiben Sie mir
+
+Wenn Sie **diese Ideen kommerziell nutzen** möchten —sie in ein Produkt oder
+eine Dienstleistung einbauen, in der Beratung verwenden oder etwas
+Kostenpflichtiges darauf aufbauen—, brauchen Sie meine schriftliche
+Genehmigung. Ich bin sehr, sehr umgänglich: Schreiben Sie mir, und wir finden
+eine Lösung.
+
+- silvio.macias.sanchez@abstract.bike
+- info@abstractarchitectures.ltd
+
+### Alles Übrige
+
+Darüber hinaus sind alle Inhalte —Texte, die Muster in ihrer Ausformulierung,
+eigene Begriffe, Struktur, Quellcode, Prompts, Beispiele und Dokumentation—
+Werke von Silvio Macías Sánchez und geschützt durch das spanische Königliche
+Gesetzesdekret 1/1996 (Gesetz über geistiges Eigentum), die Berner Übereinkunft
+und das übrige anwendbare Recht. Dieses Repository steht unter keiner
+Open-Source-Lizenz: Dass es öffentlich ist, gewährt keine Rechte über die hier
+beschriebenen hinaus.
+
+Ohne schriftliche Genehmigung sind die kommerzielle Verwertung sowie jede
+Vervielfältigung, Verbreitung, öffentliche Wiedergabe, Bearbeitung oder
+Umgestaltung zu kommerziellen Zwecken, ganz oder teilweise und auf jedem Weg,
+untersagt.
+
+**Nutzungsvorbehalt für Text und Data Mining.** Gemäß Artikel 4 Absatz 3 der
+Richtlinie (EU) 2019/790 behält sich der Urheber das Text und Data Mining zu
+kommerziellen Zwecken ausdrücklich vor, einschließlich des Trainings, der
+Feinabstimmung oder Speisung kommerzieller Modelle künstlicher Intelligenz und
+der Aufnahme in kommerzielle Datensätze oder Korpora. Wissenschaftliche
+Forschung bleibt wie oben beschrieben erlaubt.
+
+**Urheberpersönlichkeitsrechte.** Der Urheber behält das Recht, als Urheber
+genannt zu werden und jede Entstellung des Werkes zu untersagen.

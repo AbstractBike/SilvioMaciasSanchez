@@ -1,3 +1,5 @@
+🌐 **Español** · [English](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/en/sistemas-de-ficheros/gefs-fdp.md) · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/de/sistemas-de-ficheros/gefs-fdp.md)
+
 # gefs + FDP: diseño de colocación de datos
 
 *12 de octubre de 2026*
