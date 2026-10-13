@@ -1,104 +1,104 @@
-🌐 **Español** · [English](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/en/abstract-architectures/forja.md) · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/de/abstract-architectures/forja.md)
+🌐 [Español](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/es/abstract-architectures/forja.md) · [English](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/en/abstract-architectures/forja.md) · **Deutsch**
 
-# Patrón: Forja
+# Muster: Schmiede
 
-> **En una frase:** un proxy delante del LLM que descubre qué tareas se repiten y te avisa cuándo cristalizarlas.
+> **In einem Satz:** ein Proxy vor dem LLM, der herausfindet, welche Aufgaben sich wiederholen, und dir sagt, wann du sie kristallisieren solltest.
 
 | | |
 | --- | --- |
-| **Problema** | Mucho tráfico de LLM, de muchas aplicaciones, y nadie sabe bien qué contiene ni por dónde empezar a [cristalizar](cristalizacion.md). |
-| **Solución** | Un proxy que agrupa las peticiones en tareas, guarda muestras y declara madura una tarea cuando el modelo se repite. |
-| **Úsalo para** | Inventariar y endurecer tráfico de LLM sin tocar a los clientes (solo cambia la URL base). |
-| **No lo uses para** | Etapas que ya conoces (cristalízalas directamente) o tráfico casi todo conversacional o agéntico. |
-| **Se mide por** | El grado de cristalización de todo el tráfico, medido en el propio proxy. |
+| **Problem** | Viel LLM-Traffic, aus vielen Anwendungen, und niemand weiß genau, was darin steckt oder wo man mit der [Kristallisation](cristalizacion.md) anfangen soll. |
+| **Lösung** | Ein Proxy, der die Anfragen zu Aufgaben gruppiert, Beispiele speichert und eine Aufgabe für reif erklärt, sobald sich das Modell wiederholt. |
+| **Einsetzen für** | Den LLM-Traffic inventarisieren und härten, ohne die Clients anzufassen (nur die Basis-URL ändert sich). |
+| **Nicht einsetzen für** | Stufen, die du schon kennst (kristallisiere sie direkt), oder Traffic, der fast nur aus Konversationen oder Agenten besteht. |
+| **Gemessen an** | Dem Kristallisationsgrad des gesamten Traffics, gemessen im Proxy selbst. |
 
-## La idea
+## Die Idee
 
-La [Cristalización](cristalizacion.md) parte de que sabes cuáles son las etapas de tu pipeline. La forja es la misma idea **sin saberlo de antemano**: un proxy delante del LLM que ve pasar el tráfico, descubre qué tareas se repiten, avisa cuando una está madura para cristalizar y, una vez cristalizada, la atiende él mismo sin llamar al modelo. Los clientes no cambian nada salvo la URL base; el sistema se va endureciendo debajo de ellos.
+Die [Kristallisation](cristalizacion.md) geht davon aus, dass du die Stufen deiner Pipeline kennst. Die Schmiede ist dieselbe Idee, **nur ohne dieses Vorwissen**: ein Proxy vor dem LLM, der den Traffic vorbeiziehen sieht, herausfindet, welche Aufgaben sich wiederholen, Bescheid gibt, wenn eine reif zum Kristallisieren ist, und sie nach der Kristallisation selbst bedient, ohne das Modell aufzurufen. Die Clients ändern nichts außer der Basis-URL; das System härtet sich unter ihnen nach und nach.
 
-## Un ejemplo rápido
+## Ein kurzes Beispiel
 
-Una empresa tiene una docena de scripts y servicios que llaman al mismo modelo. Pone la forja delante y, al cabo de una semana, la forja informa:
+Ein Unternehmen hat ein Dutzend Skripte und Dienste, die dasselbe Modell aufrufen. Es schaltet die Schmiede davor, und nach einer Woche meldet sie:
 
-- *"Extraer datos de ofertas de empleo"*: 1.244 muestras, el modelo repite la respuesta en 13 campos → **madura**.
-- *"Resumir tickets de soporte"*: el modelo contesta distinto cada vez → **sigue líquida**.
-- Conversaciones del chatbot → **pasan directas**, la forja no las toca.
+- *„Daten aus Stellenanzeigen extrahieren"*: 1.244 Beispiele, das Modell wiederholt die Antwort in 13 Feldern → **reif**.
+- *„Support-Tickets zusammenfassen"*: das Modell antwortet jedes Mal anders → **bleibt flüssig**.
+- Chatbot-Konversationen → **laufen direkt durch**, die Schmiede rührt sie nicht an.
 
-Alguien nuclea el cristal de la primera tarea, lo revisa y lo commitea. Desde ese momento esas peticiones las responde el proxy, sin tokens.
+Jemand lässt den Kristall der ersten Aufgabe keimen, prüft ihn und committet ihn. Ab diesem Moment beantwortet der Proxy diese Anfragen selbst, ohne Tokens.
 
-## Caña, no pescado
+## Angel, kein Fisch
 
-La tentación de un proxy así es **cachear respuestas**: si ya vi esta entrada, devuelvo lo que dijo el LLM. Eso es guardar pescado. Solo acierta con entradas idénticas, crece sin fin y congela por igual los aciertos y los errores del modelo.
+Die Versuchung bei einem solchen Proxy ist, **Antworten zu cachen**: Habe ich diese Eingabe schon gesehen, gebe ich zurück, was das LLM gesagt hat. Das heißt, Fisch zu speichern. Es funktioniert nur bei identischen Eingaben, wächst endlos und friert Treffer und Fehler des Modells gleichermaßen ein.
 
-La forja no guarda respuestas para devolverlas. Guarda **muestras** para pedir, cuando haya bastantes, *el programa* que las produce. Lo que atiende después es código: generaliza a entradas que nunca vio, se revisa en un `git diff` y dice cuándo no sabe.
+Die Schmiede speichert keine Antworten, um sie zurückzugeben. Sie speichert **Beispiele**, um, sobald es genug sind, *das Programm* anzufordern, das sie erzeugt. Was sie danach bedient, ist Code: Er verallgemeinert auf Eingaben, die er nie gesehen hat, lässt sich in einem `git diff` prüfen und sagt, wann er etwas nicht weiß.
 
-## Qué es una tarea
+## Was eine Aufgabe ist
 
-No todo el tráfico se puede cristalizar. Una petición es una **tarea** cuando es una función de texto a texto con instrucciones fijas: unas instrucciones de sistema que no cambian (la *plantilla*) aplicadas a una *entrada* que sí cambia, en un solo turno, sin herramientas. Misma plantilla, misma tarea; el cliente puede además ponerle nombre.
+Nicht jeder Traffic lässt sich kristallisieren. Eine Anfrage ist eine **Aufgabe**, wenn sie eine Text-zu-Text-Funktion mit festen Anweisungen ist: System-Anweisungen, die sich nicht ändern (die *Vorlage*), angewandt auf eine *Eingabe*, die sich ändert, in einem einzigen Turn, ohne Tools. Gleiche Vorlage, gleiche Aufgabe; der Client kann ihr zusätzlich einen Namen geben.
 
-Lo demás —conversaciones, agentes con herramientas, respuestas en streaming— pasa al LLM sin tocar. Es lo abierto por naturaleza, y la forja no intenta cristalizarlo.
+Alles andere – Konversationen, Agenten mit Tools, Streaming-Antworten – geht unberührt ans LLM. Das ist von Natur aus offen, und die Schmiede versucht nicht, es zu kristallisieren.
 
-## Cuándo aplicarlo (y cuándo no)
+## Wann du es anwendest (und wann nicht)
 
-Aplícalo cuando hay **mucho tráfico de LLM y nadie sabe bien qué contiene**: varias aplicaciones, scripts y pipelines llamando al mismo modelo, cada una con sus prompts. La forja hace el inventario por ti y te dice por dónde empezar a cristalizar, con datos en lugar de intuición.
+Wende es an, wenn es **viel LLM-Traffic gibt und niemand genau weiß, was darin steckt**: mehrere Anwendungen, Skripte und Pipelines, die dasselbe Modell aufrufen, jede mit eigenen Prompts. Die Schmiede erstellt das Inventar für dich und sagt dir, wo du mit dem Kristallisieren anfangen solltest – mit Daten statt Bauchgefühl.
 
-**No** lo uses si ya conoces tus etapas: cristalízalas directamente, sin intermediario. Tampoco tiene sentido si casi todo el tráfico es conversacional o agéntico: la forja lo dejará pasar entero y solo añadirá un salto de red.
+Nutze es **nicht**, wenn du deine Stufen schon kennst: kristallisiere sie direkt, ohne Zwischenstation. Auch wenn fast der gesamte Traffic aus Konversationen oder Agenten besteht, lohnt es sich nicht: Die Schmiede lässt ihn komplett durch und fügt nur einen Netzwerk-Hop hinzu.
 
-## Cómo funciona
+## Wie es funktioniert
 
-Cada tarea recorre el mismo ciclo, y la forja sabe en qué punto está cada una:
+Jede Aufgabe durchläuft denselben Zyklus, und die Schmiede weiß, wo jede gerade steht:
 
 ```mermaid
 flowchart LR
-    L["💧 Líquida<br/>LLM + cantera"] -->|"muestras y contrastes estables"| M["🔥 Madura<br/>semilla en el horno"]
-    M -->|"humano revisa y commitea"| N["⚒️ Nucleación"]
-    N --> X["🧊💧 Mixta<br/>cristal + respaldo LLM"]
-    X -->|"casi sin defectos"| C["💎 Cristalina<br/>sin LLM"]
+    L["💧 Flüssig<br/>LLM + Steinbruch"] -->|"stabile Beispiele und Gegenproben"| M["🔥 Reif<br/>Saatkristall im Brennofen"]
+    M -->|"Mensch prüft und committet"| N["⚒️ Keimbildung"]
+    N --> X["🧊💧 Gemischt<br/>Kristall + LLM-Fallback"]
+    X -->|"fast ohne Defekte"| C["💎 Kristallin<br/>ohne LLM"]
 ```
 
-1. **Líquida.** No hay cristal: la petición va al LLM y el par entrada → salida se guarda en la **cantera**. De vez en cuando la misma petición se hace **dos veces**, en paralelo, para medir si el modelo se repite.
-2. **Madura.** Con suficientes muestras y suficientes contrastes en los que el LLM dio la misma respuesta, la forja declara la tarea madura y deja preparadas su semilla —plantilla y muestras reales— y el prompt de nucleación. Es la regla práctica de la Cristalización convertida en medida: *si al pedirle el resultado dos veces esperas la misma respuesta, esa etapa debería ser un cristal*. Un modelo que se contradice no tiene un método que dar, y esa tarea no madura.
-3. **Nucleación.** Fuera del proxy, nunca en caliente: se le pide al LLM el método, se revisa lo que devuelve, se completa la red cristalina y se commitea. La forja no compila ni carga código generado por su cuenta: el cristal es tuyo desde que se commitea, no antes.
-4. **Mixta.** El cristal entra en la **vitrina** del proxy. Lo que sabe lo responde él —sin tokens, sin red, sin coste—; lo que no, lo declara defecto, cae al LLM y queda en la cantera con su motivo: son las semillas de la siguiente versión.
-5. **Cristalina.** Cuando el cristal lo cubre casi todo, el respaldo se retira. Un defecto ya no llama al LLM: es un error explícito con su motivo. El modelo ha salido del camino.
+1. **Flüssig.** Es gibt keinen Kristall: Die Anfrage geht ans LLM, und das Paar Eingabe → Ausgabe landet im **Steinbruch**. Hin und wieder wird dieselbe Anfrage **zweimal** parallel gestellt, um zu messen, ob sich das Modell wiederholt.
+2. **Reif.** Mit genügend Beispielen und genügend Gegenproben, in denen das LLM dieselbe Antwort gab, erklärt die Schmiede die Aufgabe für reif und legt ihren Saatkristall – Vorlage und echte Beispiele – sowie den Prompt für die Keimbildung bereit. Das ist die Faustregel der Kristallisation als Messwert: *Wenn du bei zweimaliger Abfrage dieselbe Antwort erwartest, sollte diese Stufe ein Kristall sein.* Ein Modell, das sich widerspricht, hat keine Methode zu liefern, und diese Aufgabe wird nicht reif.
+3. **Keimbildung.** Außerhalb des Proxys, nie im laufenden Betrieb: Man bittet das LLM um die Methode, prüft, was es liefert, vervollständigt das Kristallgitter und committet. Die Schmiede kompiliert oder lädt generierten Code nicht auf eigene Faust: Der Kristall gehört dir ab dem Commit, nicht früher.
+4. **Gemischt.** Der Kristall kommt in die **Vitrine** des Proxys. Was er kann, beantwortet er selbst – ohne Tokens, ohne Netzwerk, ohne Kosten; was nicht, erklärt er zum Defekt, fällt ans LLM zurück und landet mit seinem Grund im Steinbruch: Das sind die Saatkristalle der nächsten Version.
+5. **Kristallin.** Wenn der Kristall fast alles abdeckt, wird der Fallback entfernt. Ein Defekt ruft das LLM nicht mehr auf: Er ist ein expliziter Fehler mit Begründung. Das Modell ist aus dem Pfad verschwunden.
 
-Cada respuesta dice quién la dio —cristal, LLM, defecto o paso directo—, así que el **grado de cristalización** de todo el tráfico se mide sin instrumentar a los clientes.
+Jede Antwort sagt, wer sie gegeben hat – Kristall, LLM, Defekt oder direkter Durchlauf –, sodass sich der **Kristallisationsgrad** des gesamten Traffics messen lässt, ohne die Clients zu instrumentieren.
 
-## Cómo implementarlo
+## Wie du es umsetzt
 
-Las piezas, separadas para que el núcleo sea puro y el transporte intercambiable:
+Die Bausteine, getrennt, damit der Kern rein bleibt und der Transport austauschbar ist:
 
-| Pieza | Qué hace |
+| Baustein | Was er tut |
 | --- | --- |
-| **Tarea** | Identifica plantilla y entrada en cada petición. |
-| **Cantera** | Registro *append-only* de lo que resolvió el LLM, con contrastes y defectos; sobrevive a los reinicios, así que la madurez también. |
-| **Madurez** | La política que decide cuándo una tarea está lista (mínimo de muestras, de contrastes y de estabilidad). |
-| **Horno** | Donde quedan la semilla y el prompt de nucleación de cada tarea madura, esperando a un humano. |
-| **Vitrina** | Los cristales ya revisados, cada uno en fase mixta o cristalina. |
-| **Proxy** | Habla la misma API del LLM por los dos lados; las credenciales pasan tal cual y no se guardan. |
+| **Aufgabe** | Erkennt Vorlage und Eingabe in jeder Anfrage. |
+| **Steinbruch** | *Append-only*-Protokoll dessen, was das LLM gelöst hat, mit Gegenproben und Defekten; überlebt Neustarts, die Reife also auch. |
+| **Reife** | Die Richtlinie, die entscheidet, wann eine Aufgabe bereit ist (Minimum an Beispielen, Gegenproben und Stabilität). |
+| **Brennofen** | Wo Saatkristall und Keimbildungs-Prompt jeder reifen Aufgabe liegen und auf einen Menschen warten. |
+| **Vitrine** | Die bereits geprüften Kristalle, jeder in der gemischten oder kristallinen Phase. |
+| **Proxy** | Spricht auf beiden Seiten dieselbe LLM-API; die Credentials werden unverändert durchgereicht und nicht gespeichert. |
 
-El núcleo solo *decide* (cristal, LLM o paso) y *aprende* (registra y evalúa madurez); no habla HTTP ni llama al modelo.
+Der Kern *entscheidet* nur (Kristall, LLM oder Durchlauf) und *lernt* (protokolliert und bewertet die Reife); er spricht kein HTTP und ruft das Modell nicht auf.
 
-Implementación de referencia (proxy OCaml para la Messages API de Anthropic, cantera en GreptimeDB y módulo NixOS): [AbstractBike/cristales — la forja](https://github.com/AbstractBike/cristales/blob/main/doc/forja.md).
+Referenzimplementierung (OCaml-Proxy für die Messages API von Anthropic, Steinbruch in GreptimeDB und NixOS-Modul): [AbstractBike/cristales — la forja](https://github.com/AbstractBike/cristales/blob/main/doc/forja.md).
 
-## Riesgos y salvaguardas
+## Risiken und Schutzmaßnahmen
 
-| Riesgo | Qué pasa | Salvaguarda |
+| Risiko | Was passiert | Schutzmaßnahme |
 | --- | --- | --- |
-| **Ser una caché con otro nombre** | Guardar salidas y servirlas porque "ya las vio". | Estructural: la forja solo sirve código commiteado, nunca muestras. |
-| **Nucleación automática** | Cerrar el ciclo sin nadie en medio, cargando en caliente lo que escribió el modelo. Es tentador y es justo el error que el patrón evita. | La revisión humana y el commit son el punto en el que el líquido se vuelve cristal. |
-| **Privacidad de la cantera** | Guarda entradas reales, así que hereda la sensibilidad del tráfico. | Tratarla con el mismo cuidado que el tráfico que la alimenta. |
-| **Coste del contraste** | Medir la estabilidad cuesta llamadas extra. | Contrastar solo una fracción, y solo mientras la tarea es líquida. |
+| **Ein Cache unter anderem Namen sein** | Ausgaben speichern und ausliefern, weil man sie „schon gesehen hat". | Strukturell: Die Schmiede liefert nur committeten Code aus, nie Beispiele. |
+| **Automatische Keimbildung** | Den Zyklus ohne jemanden dazwischen schließen und im laufenden Betrieb laden, was das Modell geschrieben hat. Verlockend, und genau der Fehler, den das Muster vermeidet. | Menschliche Prüfung und Commit sind der Punkt, an dem aus Flüssigem Kristall wird. |
+| **Privatsphäre des Steinbruchs** | Er speichert echte Eingaben und erbt daher die Sensibilität des Traffics. | Mit derselben Sorgfalt behandeln wie den Traffic, der ihn speist. |
+| **Kosten der Gegenprobe** | Stabilität zu messen kostet zusätzliche Aufrufe. | Nur einen Bruchteil gegenprüfen, und nur solange die Aufgabe flüssig ist. |
 
-## La tensión de fondo
+## Die grundlegende Spannung
 
-Es la misma que en la Cristalización, llevada un paso más allá: allí decides tú qué sacar del LLM; aquí es el propio tráfico el que te lo dice. La forja es un intermediario cuyo éxito se mide en cuántas veces deja de hacer de intermediario.
+Es ist dieselbe wie bei der Kristallisation, nur einen Schritt weitergedacht: Dort entscheidest du, was du aus dem LLM herausnimmst; hier sagt dir das der Traffic selbst. Die Schmiede ist ein Vermittler, dessen Erfolg sich daran misst, wie oft er aufhört, Vermittler zu sein.
 
-## Ver también
+## Siehe auch
 
-- [Cristalización](cristalizacion.md): el patrón base; qué es un cristal y cómo se nuclea.
-- [Inversión de Motivación](../motivacion/inversion-de-motivacion.md): la misma idea de fondo, aplicada a las personas.
+- [Kristallisation](cristalizacion.md): das Basismuster; was ein Kristall ist und wie er keimt.
+- [Motivationsumkehr](../motivacion/inversion-de-motivacion.md): dieselbe Grundidee, auf Menschen angewandt.
 
 ---
 
-© 2026 Silvio Macías Sánchez. Todos los derechos reservados. Libre para investigación y docencia sin ánimo de lucro, citando al autor; para uso comercial, escríbeme a silvio.macias.sanchez@abstract.bike o info@abstractarchitectures.ltd. Ver [COPYRIGHT.md](../COPYRIGHT.md).
+© 2026 Silvio Macías Sánchez. Alle Rechte vorbehalten. Frei für Forschung und Lehre ohne Gewinnabsicht, unter Nennung des Autors; für kommerzielle Nutzung schreib an silvio.macias.sanchez@abstract.bike oder info@abstractarchitectures.ltd. Siehe [COPYRIGHT.md](../COPYRIGHT.md).

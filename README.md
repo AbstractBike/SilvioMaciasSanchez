@@ -1,66 +1,66 @@
-🌐 **Español** · [English](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/en) · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/de)
+🌐 [Español](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/es) · [English](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/en) · **Deutsch**
 
 # Silvio Macías Sánchez
 
-Patrones para trabajar con inteligencia artificial sin perder lo que importa: tu capacidad de actuar y el control de tus sistemas. También algún diseño de sistemas de almacenamiento.
+Muster, um mit künstlicher Intelligenz zu arbeiten, ohne zu verlieren, was zählt: deine Handlungsfähigkeit und die Kontrolle über deine Systeme. Außerdem einige Entwürfe für Speichersysteme.
 
-Cada patrón se lee en unos minutos y empieza con un resumen de una frase y una ficha rápida. Si solo tienes un momento, lee eso.
+Jedes Muster liest sich in wenigen Minuten und beginnt mit einer Zusammenfassung in einem Satz und einem Kurzsteckbrief. Wenn du nur einen Moment hast, lies das.
 
-## Los patrones
+## Die Muster
 
-| Patrón | En una frase | Lectura |
+| Muster | In einem Satz | Lesezeit |
 | --- | --- | --- |
-| [**Inversión de Motivación**](motivacion/inversion-de-motivacion.md) | Una IA que no hace el trabajo por ti, sino que te ayuda a hacerlo tú. | 5 min |
-| [**Cristalización**](abstract-architectures/cristalizacion.md) | Pídele a la IA el programa que resuelve el problema, no la respuesta a cada caso. | 6 min |
-| [**Forja**](abstract-architectures/forja.md) | Un proxy delante del LLM que descubre qué tareas se repiten y te avisa cuándo cristalizarlas. | 7 min |
+| [**Motivationsumkehr**](motivacion/inversion-de-motivacion.md) | Eine KI, die die Arbeit nicht für dich erledigt, sondern dir hilft, sie selbst zu machen. | 5 Min. |
+| [**Kristallisation**](abstract-architectures/cristalizacion.md) | Bitte die KI um das Programm, das das Problem löst, nicht um die Antwort auf jeden Einzelfall. | 6 Min. |
+| [**Schmiede**](abstract-architectures/forja.md) | Ein Proxy vor dem LLM, der entdeckt, welche Aufgaben sich wiederholen, und dir sagt, wann du sie kristallisieren solltest. | 7 Min. |
 
-### Cómo se relacionan
+### Wie sie zusammenhängen
 
-Los tres comparten una misma idea: **el objetivo no es la respuesta, sino la capacidad que queda cuando la IA se retira.**
+Die drei teilen dieselbe Idee: **Das Ziel ist nicht die Antwort, sondern die Fähigkeit, die bleibt, wenn sich die KI zurückzieht.**
 
 ```mermaid
 flowchart LR
-    IM["🧠 Inversión de Motivación<br/><i>para personas</i>"] -. "misma idea" .- CR["💎 Cristalización<br/><i>para sistemas</i>"]
-    CR -->|"sin saber qué etapas hay"| FO["⚒️ Forja<br/><i>para tráfico de LLM</i>"]
+    IM["🧠 Motivationsumkehr<br/><i>für Menschen</i>"] -. "gleiche Idee" .- CR["💎 Kristallisation<br/><i>für Systeme</i>"]
+    CR -->|"ohne zu wissen, welche Stufen es gibt"| FO["⚒️ Schmiede<br/><i>für LLM-Traffic</i>"]
 ```
 
-- **¿Usas la IA para aprender o crear?** Empieza por la [Inversión de Motivación](motivacion/inversion-de-motivacion.md).
-- **¿Tienes una pipeline que llama a un LLM en cada paso?** Empieza por la [Cristalización](abstract-architectures/cristalizacion.md).
-- **¿Tienes mucho tráfico de LLM y no sabes qué contiene?** Empieza por la [Forja](abstract-architectures/forja.md).
+- **Nutzt du KI, um zu lernen oder etwas zu erschaffen?** Beginne mit der [Motivationsumkehr](motivacion/inversion-de-motivacion.md).
+- **Hast du eine Pipeline, die in jedem Schritt ein LLM aufruft?** Beginne mit der [Kristallisation](abstract-architectures/cristalizacion.md).
+- **Hast du viel LLM-Traffic und weißt nicht, was darin steckt?** Beginne mit der [Schmiede](abstract-architectures/forja.md).
 
-### Cómo está escrito cada patrón
+### Wie jedes Muster aufgebaut ist
 
-Todos siguen la misma estructura, para que sepas dónde buscar:
+Alle folgen derselben Struktur, damit du weißt, wo du suchen musst:
 
-1. **En una frase** y una **ficha**: problema, solución, cuándo usarlo y cómo se mide.
-2. **La idea** y **un ejemplo rápido**.
-3. **Cuándo aplicarlo (y cuándo no).**
-4. **Cómo funciona** y **cómo implementarlo**.
-5. **Riesgos y salvaguardas.**
-6. **Ver también**.
+1. **In einem Satz** und ein **Steckbrief**: Problem, Lösung, wann du es einsetzt und wie man es misst.
+2. **Die Idee** und **ein schnelles Beispiel**.
+3. **Wann du es anwendest (und wann nicht).**
+4. **Wie es funktioniert** und **wie du es umsetzt**.
+5. **Risiken und Schutzmaßnahmen.**
+6. **Siehe auch**.
 
-## Sistemas de ficheros
+## Dateisysteme
 
-| Diseño | En una frase |
+| Entwurf | In einem Satz |
 | --- | --- |
-| [**gefs + FDP**](sistemas-de-ficheros/gefs-fdp.md) | Que el sistema de ficheros de 9front le diga al SSD qué bloques mueren juntos, para que la amplificación de escritura baje a ≈1 sin cambiar el formato en disco. |
+| [**gefs + FDP**](sistemas-de-ficheros/gefs-fdp.md) | Das Dateisystem von 9front sagt der SSD, welche Blöcke gemeinsam sterben, damit die Schreibverstärkung auf ≈1 sinkt, ohne das Format auf der Platte zu ändern. |
 
-## Idiomas
+## Sprachen
 
-El contenido está en tres idiomas, cada uno en su rama, con los mismos ficheros en las mismas rutas:
+Der Inhalt liegt in drei Sprachen vor, jede in ihrem eigenen Branch, mit denselben Dateien unter denselben Pfaden:
 
-| Rama | Idioma |
+| Branch | Sprache |
 | --- | --- |
-| [`es`](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/es) | Español (original) |
+| [`es`](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/es) | Español (Original) |
 | [`en`](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/en) | English |
 | [`de`](https://github.com/AbstractBike/SilvioMaciasSanchez/tree/de) | Deutsch |
 
-El español es la versión original; si una traducción y el original no coinciden, vale el original.
+Spanisch ist die Originalfassung; wenn eine Übersetzung und das Original voneinander abweichen, gilt das Original.
 
-## Uso y derechos
+## Nutzung und Rechte
 
-Libre para investigación y docencia sin ánimo de lucro, citando al autor. Para uso comercial, escríbeme —soy muy amigable—: silvio.macias.sanchez@abstract.bike o info@abstractarchitectures.ltd. Detalles en [COPYRIGHT.md](COPYRIGHT.md).
+Frei für Forschung und Lehre ohne Gewinnabsicht, unter Nennung des Autors. Für kommerzielle Nutzung schreib mir –ich bin sehr freundlich–: silvio.macias.sanchez@abstract.bike oder info@abstractarchitectures.ltd. Details in [COPYRIGHT.md](COPYRIGHT.md).
 
 ---
 
-© 2026 Silvio Macías Sánchez. Todos los derechos reservados.
+© 2026 Silvio Macías Sánchez. Alle Rechte vorbehalten.

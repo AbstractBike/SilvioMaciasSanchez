@@ -1,229 +1,229 @@
-🌐 **Español** · [English](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/en/sistemas-de-ficheros/gefs-fdp.md) · [Deutsch](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/de/sistemas-de-ficheros/gefs-fdp.md)
+🌐 [Español](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/es/sistemas-de-ficheros/gefs-fdp.md) · [English](https://github.com/AbstractBike/SilvioMaciasSanchez/blob/en/sistemas-de-ficheros/gefs-fdp.md) · **Deutsch**
 
-# gefs + FDP: diseño de colocación de datos
+# gefs + FDP: Design für die Datenplatzierung
 
-*12 de octubre de 2026*
+*12. Oktober 2026*
 
-## Resumen
+## Zusammenfassung
 
-Propuesta: que [gefs](https://orib.dev/gefs.html) etiquete cada escritura con un *placement handle* de FDP (Flexible Data Placement, NVMe) según la clase de bloque (pivot, hoja, log, datos) y que libere con Deallocate lo que ya está muerto tras cada commit. El objetivo es que la amplificación de escritura del SSD (WAF) baje a ≈1 sin cambiar el formato en disco.
+Vorschlag: [gefs](https://orib.dev/gefs.html) versieht jeden Schreibvorgang mit einem FDP-*placement handle* (Flexible Data Placement, NVMe) passend zur Blockklasse (Pivot, Blatt, Log, Daten) und gibt nach jedem Commit mit Deallocate frei, was bereits tot ist. Ziel ist, dass die Schreibverstärkung der SSD (WAF) auf ≈1 sinkt, ohne das On-Disk-Format zu ändern.
 
-- **Por qué FDP y no ZNS:** FDP es una pista sobre una escritura normal. No obliga a escribir en secuencia, no exige GC del host y un disco sin FDP sigue funcionando igual. ZNS obligaría a reubicar bloques vivos, y en un árbol CoW con snapshots eso implica reescribir punteros.
-- **Por qué encaja en gefs:** gefs ya separa las arenas por tipo de bloque para que las escrituras sean secuenciales. FDP traslada esa misma separación al NAND, que es donde cuenta.
-- **Coste:** cambios en el asignador de gefs y en el driver NVMe (9front `sdnvme`, OpenBSD `nvme(4)`), sin migración de discos.
-- **Primer paso, sin hardware:** instrumentar gefs para medir el tiempo de vida real de cada clase de bloque. Con esos datos se valida el mapeo antes de tocar el driver.
+- **Warum FDP und nicht ZNS:** FDP ist ein Hinweis zu einem normalen Schreibvorgang. Es erzwingt kein sequentielles Schreiben, verlangt kein Host-GC, und eine SSD ohne FDP funktioniert weiterhin genauso. ZNS würde erzwingen, lebende Blöcke zu verschieben, und in einem CoW-Baum mit Snapshots bedeutet das, Zeiger neu zu schreiben.
+- **Warum es zu gefs passt:** gefs trennt die Arenen bereits nach Blocktyp, damit Schreibvorgänge sequentiell sind. FDP überträgt dieselbe Trennung auf den NAND, und dort zählt sie.
+- **Kosten:** Änderungen am Allokator von gefs und am NVMe-Treiber (9front `sdnvme`, OpenBSD `nvme(4)`), ohne Migration der Platten.
+- **Erster Schritt, ohne Hardware:** gefs instrumentieren, um die tatsächliche Lebensdauer jeder Blockklasse zu messen. Mit diesen Daten wird das Mapping validiert, bevor der Treiber angefasst wird.
 
-## Contexto
+## Kontext
 
-El SSD no sabe qué bloques de gefs mueren juntos, así que los mezcla en el mismo superbloque NAND y luego tiene que copiar los vivos para borrarlo. FDP le dice al SSD qué escrituras van juntas.
+Die SSD weiß nicht, welche gefs-Blöcke gemeinsam sterben, also mischt sie sie im selben NAND-Superblock und muss danach die lebenden kopieren, um ihn zu löschen. FDP sagt der SSD, welche Schreibvorgänge zusammengehören.
 
-### gefs hoy
+### gefs heute
 
-- Todos los bloques tienen el mismo tamaño. Un puntero es `(addr, hash, birth_gen)`.
-- Los bloques salen de **arenas**. Cada arena guarda en un log sus asignaciones y liberaciones, que al montar se cargan en un AVL de regiones libres.
-- La arena se elige por round-robin desplazado según el tipo de bloque (datos, pivot u hoja), para que cada tipo se escriba en secuencia. El contador avanza cada pocos miles de escrituras.
-- Un bloque nacido después del último snapshot se libera al momento. Si no, va al *deadlist* y se libera cuando muere el snapshot que lo retiene.
-- Hay un commit cada ~5 s: primero los bloques sucios, luego el superbloque.
+- Alle Blöcke haben dieselbe Größe. Ein Zeiger ist `(addr, hash, birth_gen)`.
+- Die Blöcke stammen aus **Arenen**. Jede Arena speichert ihre Allokationen und Freigaben in einem Log, die beim Mounten in einen AVL-Baum freier Regionen geladen werden.
+- Die Arena wird per Round-Robin gewählt, versetzt nach Blocktyp (Daten, Pivot oder Blatt), sodass jeder Typ sequentiell geschrieben wird. Der Zähler rückt alle paar tausend Schreibvorgänge vor.
+- Ein Block, der nach dem letzten Snapshot entstanden ist, wird sofort freigegeben. Andernfalls landet er in der *deadlist* und wird freigegeben, wenn der Snapshot stirbt, der ihn festhält.
+- Etwa alle 5 s gibt es einen Commit: zuerst die schmutzigen Blöcke, dann der Superblock.
 
-### FDP en lo que nos importa
+### FDP, soweit es uns betrifft
 
-| Término | Qué es |
+| Begriff | Was es ist |
 | --- | --- |
-| Reclaim Unit (RU) | Grupo de bloques NAND que se borra entero; normalmente un superbloque del SSD |
-| Reclaim Unit Handle (RUH) | "Cabeza de escritura" del SSD que va llenando una RU |
-| Placement Handle (PH) | Índice, por namespace, a la lista de RUH fijada al crear el namespace |
-| Placement Identifier | Reclaim Group + PH; viaja en el campo DSPEC de cada escritura (directiva Data Placement) |
+| Reclaim Unit (RU) | Gruppe von NAND-Blöcken, die komplett gelöscht wird; normalerweise ein Superblock der SSD |
+| Reclaim Unit Handle (RUH) | „Schreibkopf“ der SSD, der nach und nach eine RU füllt |
+| Placement Handle (PH) | Index pro Namespace in die Liste der RUH, die beim Erstellen des Namespace festgelegt wird |
+| Placement Identifier | Reclaim Group + PH; wird im DSPEC-Feld jedes Schreibvorgangs übertragen (Data-Placement-Direktive) |
 
-- Sin directiva, la escritura va al PH 0. Un PH inválido no aborta la escritura: se coloca donde decida el SSD y queda anotado como evento FDP.
-- SNIA recomienda un solo Reclaim Group, RU del tamaño de un superbloque y contar con 8–32 RUH. Los SSD QLC o pequeños pueden ofrecer solo 8.
-- La WAF baja si las LBA de una RU se reescriben en otra RU o se liberan con Deallocate antes de que el SSD reclame esa RU.
-- Ejemplo: en CacheLib, separar metadatos (aleatorios) de datos (secuenciales) en dos RUH llevó la WAF de ≈3 a ≈1.
+- Ohne Direktive geht der Schreibvorgang an PH 0. Ein ungültiger PH bricht den Schreibvorgang nicht ab: Er wird dort platziert, wo die SSD es entscheidet, und als FDP-Ereignis vermerkt.
+- SNIA empfiehlt eine einzige Reclaim Group, RUs in der Größe eines Superblocks und 8–32 RUH. QLC- oder kleine SSDs bieten möglicherweise nur 8.
+- Die WAF sinkt, wenn die LBAs einer RU in eine andere RU umgeschrieben oder mit Deallocate freigegeben werden, bevor die SSD diese RU zurückfordert.
+- Beispiel: In CacheLib brachte die Trennung von Metadaten (zufällig) und Daten (sequentiell) auf zwei RUH die WAF von ≈3 auf ≈1.
 
-## Mapeo de clases a placement handles
+## Mapping von Klassen auf Placement Handles
 
-Se usan 6 placement handles, por debajo del mínimo de 8 RUH que ofrecen los SSD con FDP. El criterio es el tiempo de vida esperado, no el tipo lógico: bloques que mueren juntos van juntos.
+Es werden 6 Placement Handles verwendet, unterhalb des Minimums von 8 RUH, das SSDs mit FDP bieten. Das Kriterium ist die erwartete Lebensdauer, nicht der logische Typ: Blöcke, die gemeinsam sterben, kommen zusammen.
 
-| PH | Clase de bloque | Vida esperada | Por qué |
+| PH | Blockklasse | Erwartete Lebensdauer | Warum |
 | --- | --- | --- | --- |
-| 0 | Superbloque y cualquier escritura sin etiquetar | Se sobrescribe en sitio en cada commit | Es el destino por defecto del SSD; así lo que gefs no etiquete no contamina las demás clases |
-| 1 | Pivots del árbol principal (raíz incluida) | Segundos: uno o pocos commits | Cada upsert copia la raíz y cada flush copia el camino; es la clase más caliente |
-| 2 | Hojas del árbol principal | Minutos a horas | Mueren cuando un flush llega a ellas; escritas con menos frecuencia que los pivots |
-| 3 | Árbol de snapshots, logs de asignación, bloques de deadlist | Hasta la siguiente compactación o borrado de snapshot | Metadatos pequeños, de solo añadir, con su propio ciclo |
-| 4 | Datos de ficheros, escritura nueva | Hasta sobrescribir o borrar + retención de snapshots | El grueso del volumen; vida larga e impredecible |
-| 5 | Reservado: datos fríos o de larga retención | Días o más | Para la fase 2: separar ficheros que se escriben una vez (binarios) de los que se reescriben |
+| 0 | Superblock und alle nicht etikettierten Schreibvorgänge | Wird bei jedem Commit an Ort und Stelle überschrieben | Das ist das Standardziel der SSD; so verunreinigt alles, was gefs nicht etikettiert, die anderen Klassen nicht |
+| 1 | Pivots des Hauptbaums (inklusive Wurzel) | Sekunden: ein oder wenige Commits | Jedes Upsert kopiert die Wurzel und jeder Flush kopiert den Pfad; es ist die heißeste Klasse |
+| 2 | Blätter des Hauptbaums | Minuten bis Stunden | Sie sterben, wenn ein Flush sie erreicht; sie werden seltener geschrieben als die Pivots |
+| 3 | Snapshot-Baum, Allokations-Logs, deadlist-Blöcke | Bis zur nächsten Kompaktierung oder Löschung eines Snapshots | Kleine, rein anhängende Metadaten mit eigenem Zyklus |
+| 4 | Dateidaten, Neuschreibung | Bis zum Überschreiben oder Löschen + Snapshot-Aufbewahrung | Der Großteil des Volumens; lange und unvorhersehbare Lebensdauer |
+| 5 | Reserviert: kalte Daten oder Daten mit langer Aufbewahrung | Tage oder mehr | Für Phase 2: Dateien, die einmal geschrieben werden (Binärdateien), von solchen trennen, die neu geschrieben werden |
 
-Notas:
+Hinweise:
 
-- El tiempo de vida de un bloque en gefs no depende solo de cuándo se sobrescribe: un snapshot que lo retiene lo mantiene vivo. Si se conservan snapshots horarios o diarios, las clases 1 y 2 también acaban en deadlists. Hay que medirlo (ver [Medición](#medición)).
-- La política es una tabla `clase → PH` en la configuración de montaje, no código. Con menos RUH disponibles se colapsan clases: 1+3 y 2+4.
+- Die Lebensdauer eines Blocks in gefs hängt nicht nur davon ab, wann er überschrieben wird: Ein Snapshot, der ihn festhält, hält ihn am Leben. Wenn stündliche oder tägliche Snapshots aufbewahrt werden, landen auch die Klassen 1 und 2 in deadlists. Das muss gemessen werden (siehe [Messung](#messung)).
+- Die Policy ist eine Tabelle `Klasse → PH` in der Mount-Konfiguration, kein Code. Bei weniger verfügbaren RUH werden Klassen zusammengelegt: 1+3 und 2+4.
 
-## Ruta de escritura
+## Schreibpfad
 
 ```mermaid
 flowchart LR
-  subgraph gefs["gefs: clase de bloque"]
-    P[Pivots, raíz incluida]
-    H[Hojas]
-    M[Snapshots, logs, deadlists]
-    D[Datos de ficheros]
-    S[Superbloque, commit]
+  subgraph gefs["gefs: Blockklasse"]
+    P[Pivots, Wurzel inklusive]
+    H[Blätter]
+    M[Snapshots, Logs, deadlists]
+    D[Dateidaten]
+    S[Superblock, Commit]
   end
-  subgraph ssd["SSD con FDP"]
-    R1[RUH · vida de segundos]
-    R2[RUH · minutos a horas]
-    R3[RUH · metadatos pequeños]
-    R4[RUH · vida larga]
-    R0[RUH · por defecto]
+  subgraph ssd["SSD mit FDP"]
+    R1[RUH · Lebensdauer von Sekunden]
+    R2[RUH · Minuten bis Stunden]
+    R3[RUH · kleine Metadaten]
+    R4[RUH · lange Lebensdauer]
+    R0[RUH · Standard]
   end
   P -->|syncer, DSPEC = PH 1| R1
   H -->|PH 2| R2
   M -->|PH 3| R3
   D -->|PH 4| R4
   S -->|PH 0 + FUA| R0
-  F[Bloques liberados] --> DA["Deallocate en lote<br/>tras commit y época"] --> RU[RU se borra sin copiar]
+  F[Freigegebene Blöcke] --> DA["Deallocate im Batch<br/>nach Commit und Epoche"] --> RU[RU wird ohne Kopieren gelöscht]
 ```
 
-Cada syncer escribe con el placement handle de la clase del bloque, así que lo que muere a la vez acaba en la misma RU. Cuando el commit que libera un bloque es durable, el Deallocate invalida sus LBA y el SSD puede borrar la RU sin copiar nada.
+Jeder syncer schreibt mit dem Placement Handle der Blockklasse, sodass alles, was gleichzeitig stirbt, in derselben RU landet. Sobald der Commit, der einen Block freigibt, durable ist, invalidiert Deallocate dessen LBAs, und die SSD kann die RU löschen, ohne etwas zu kopieren.
 
-## Cambios en el asignador y el formato
+## Änderungen am Allokator und am Format
 
-El formato en disco no cambia: el PH viaja en el comando de escritura, no en el bloque. Un disco escrito con FDP se monta igual sin FDP, y al revés.
+Das On-Disk-Format ändert sich nicht: Der PH reist im Schreibkommando mit, nicht im Block. Eine mit FDP beschriebene Platte lässt sich genauso ohne FDP mounten, und umgekehrt.
 
-Cambios en el asignador:
+Änderungen am Allokator:
 
-1. **Clase en la petición de bloque.** La función que pide un bloque nuevo recibe ya el tipo (datos, pivot, hoja, log). Se añade una función `clase(tipo, árbol)` que distingue el árbol principal del de snapshots.
-2. **El PH viaja con el bloque sucio.** El bloque en caché guarda su clase. El syncer la pasa al driver al escribir.
-3. **Arenas: se mantienen, pero por otra razón.** Con FDP, que las LBA sean secuenciales importa poco, porque es el RUH el que decide la posición física. Las arenas siguen sirviendo para repartir contención y localidad de lectura. El desplazamiento por tipo se puede conservar: no estorba.
-4. **Sin FDP, nada cambia.** Si el driver no anuncia FDP, la clase se ignora y gefs se comporta como hoy.
+1. **Klasse in der Blockanforderung.** Die Funktion, die einen neuen Block anfordert, erhält bereits den Typ (Daten, Pivot, Blatt, Log). Hinzu kommt eine Funktion `klasse(typ, baum)`, die den Hauptbaum vom Snapshot-Baum unterscheidet.
+2. **Der PH reist mit dem schmutzigen Block.** Der Block im Cache speichert seine Klasse. Der syncer übergibt sie beim Schreiben an den Treiber.
+3. **Arenen: bleiben erhalten, aber aus einem anderen Grund.** Mit FDP spielt es kaum eine Rolle, dass die LBAs sequentiell sind, denn die RUH entscheidet über die physische Position. Die Arenen dienen weiterhin dazu, Contention zu verteilen und die Leselokalität zu wahren. Der Versatz nach Typ kann beibehalten werden: Er stört nicht.
+4. **Ohne FDP ändert sich nichts.** Wenn der Treiber FDP nicht meldet, wird die Klasse ignoriert und gefs verhält sich wie heute.
 
-Opcional, fase 2:
+Optional, Phase 2:
 
-- Leer el log de uso de RUH (cuánto queda en la RU abierta de cada handle) para que las ráfagas grandes de una clase empiecen en una RU nueva.
-- Si gefs llega a asignar rangos grandes de bloques (extents, ficheros grandes), alinearlos al tamaño de RU.
+- Das Log zur RUH-Nutzung lesen (wie viel in der offenen RU jedes Handles noch frei ist), damit große Schreibschübe einer Klasse in einer neuen RU beginnen.
+- Falls gefs irgendwann große Blockbereiche vergibt (Extents, große Dateien), diese an der RU-Größe ausrichten.
 
-## Deallocate y commit
+## Deallocate und Commit
 
-Sin Deallocate, FDP rinde la mitad: el SSD sigue creyendo vivos los bloques que gefs ya liberó y los copia al reclamar su RU.
+Ohne Deallocate leistet FDP nur die Hälfte: Die SSD hält die Blöcke, die gefs bereits freigegeben hat, weiter für lebendig und kopiert sie, wenn sie ihre RU zurückfordert.
 
-### Deallocate, después del commit y nunca antes
+### Deallocate, nach dem Commit und niemals davor
 
-- Un bloque solo puede desasignarse cuando **el commit que lo libera ya es durable**. Si se desasigna antes y el sistema cae, el commit anterior, que es el que se monta, apunta a un bloque borrado.
-- También hay que esperar a la reclamación por épocas: ningún lector puede estar todavía dentro de la generación vieja.
-- Orden: commit durable → época libre → los rangos liberados pasan a una cola → un proceso los envía en lotes con Dataset Management (Deallocate), juntando rangos contiguos.
-- Si la cola se pierde en una caída no pasa nada: esos bloques solo quedan sin desasignar hasta que gefs los reutilice.
-- Esto ayuda a cualquier SSD, tenga FDP o no. Por eso va antes que FDP en las fases.
+- Ein Block darf erst dann deallokiert werden, wenn **der Commit, der ihn freigibt, bereits durable ist**. Wird vorher deallokiert und das System stürzt ab, zeigt der vorherige Commit, der gemountet wird, auf einen gelöschten Block.
+- Außerdem muss die Reclamation per Epochen abgewartet werden: Kein Leser darf sich noch in der alten Generation befinden.
+- Reihenfolge: Commit durable → Epoche frei → die freigegebenen Bereiche wandern in eine Warteschlange → ein Prozess sendet sie in Batches per Dataset Management (Deallocate) und fasst dabei zusammenhängende Bereiche zusammen.
+- Geht die Warteschlange bei einem Absturz verloren, passiert nichts: Diese Blöcke bleiben lediglich nicht deallokiert, bis gefs sie wiederverwendet.
+- Das hilft jeder SSD, mit oder ohne FDP. Deshalb steht es in den Phasen vor FDP.
 
 ### Commit
 
-1. Escribir todos los bloques sucios, cada uno con su PH.
-2. Flush, para que sean durables antes que el superbloque.
-3. Escribir el superbloque (PH 0) con FUA.
+1. Alle schmutzigen Blöcke schreiben, jeden mit seinem PH.
+2. Flush, damit sie vor dem Superblock durable sind.
+3. Den Superblock (PH 0) mit FUA schreiben.
 
-- Si el controlador anuncia que no tiene caché de escritura volátil (`VWC=0`, habitual en SSD con protección ante cortes de luz), el flush sobra: basta con esperar a que se completen las escrituras.
-- No se depende de escrituras atómicas (AWUPF): el hash del puntero padre ya detecta un bloque roto, y en NVMe la atomicidad no se puede pedir por comando.
+- Meldet der Controller, dass er keinen flüchtigen Schreibcache hat (`VWC=0`, üblich bei SSDs mit Schutz vor Stromausfall), ist der Flush überflüssig: Es genügt, auf den Abschluss der Schreibvorgänge zu warten.
+- Es wird nicht auf atomare Schreibvorgänge (AWUPF) gesetzt: Der Hash im Elternzeiger erkennt bereits einen defekten Block, und in NVMe lässt sich Atomarität nicht per Kommando anfordern.
 
-## Trabajo de driver
+## Treiberarbeit
 
-El driver solo tiene que hacer tres cosas: poner la directiva en las escrituras, enviar Deallocate y decir si hay FDP. La configuración de FDP se hace una vez, fuera de gefs.
+Der Treiber muss nur drei Dinge tun: die Direktive in die Schreibvorgänge setzen, Deallocate senden und melden, ob FDP vorhanden ist. Die FDP-Konfiguration erfolgt einmalig außerhalb von gefs.
 
-### Configuración (una vez por disco)
+### Konfiguration (einmal pro Platte)
 
-- Activar FDP en el endurance group y crear el namespace con su lista de placement handles. Se hace con `nvme-cli` desde Linux. Activar FDP exige que el endurance group no tenga namespaces, así que **borra el disco**.
-- Para desarrollar sin hardware: QEMU emula FDP desde la versión 8.0.
+- FDP in der Endurance Group aktivieren und den Namespace mit seiner Liste von Placement Handles erstellen. Das geschieht mit `nvme-cli` unter Linux. Das Aktivieren von FDP setzt voraus, dass die Endurance Group keine Namespaces hat, also **löscht es die Platte**.
+- Zum Entwickeln ohne Hardware: QEMU emuliert FDP seit Version 8.0.
 
-### En el comando de escritura
+### Im Schreibkommando
 
-- Directive Type = Data Placement en CDW12 (bits 23:20), y el Placement Identifier en DSPEC, CDW13 (bits 31:16).
-- Al enlazar: leer Identify y la configuración FDP para saber si está activo, cuántos PH tiene el namespace y el tamaño de RU.
+- Directive Type = Data Placement in CDW12 (Bits 23:20) und der Placement Identifier in DSPEC, CDW13 (Bits 31:16).
+- Beim Binden: Identify und die FDP-Konfiguration lesen, um zu wissen, ob FDP aktiv ist, wie viele PH der Namespace hat und wie groß die RU ist.
 
 ### 9front `sdnvme`
 
-- Problema: `devsd` ofrece `data` como fichero de bytes y no tiene un canal para pasar una pista por escritura.
-- Propuesta: un mensaje de control `placement N` sobre el fid abierto. gefs abre `data` una vez por clase y cada syncer escribe por el fid de su clase. No cambia la interfaz de lectura y escritura.
-- Deallocate: comprobar si `sdnvme` ya expone discard/TRIM por `ctl`. Si no, añadir un mensaje `deallocate lba n` que se traduzca a Dataset Management.
-- Exponer en `ctl` las capacidades: `fdp on`, número de PH, tamaño de RU y `vwc`.
+- Problem: `devsd` bietet `data` als Bytedatei an und hat keinen Kanal, um pro Schreibvorgang einen Hinweis zu übergeben.
+- Vorschlag: eine Control-Nachricht `placement N` auf dem geöffneten fid. gefs öffnet `data` einmal pro Klasse, und jeder syncer schreibt über den fid seiner Klasse. Die Lese- und Schreibschnittstelle bleibt unverändert.
+- Deallocate: prüfen, ob `sdnvme` Discard/TRIM bereits über `ctl` bereitstellt. Falls nicht, eine Nachricht `deallocate lba n` hinzufügen, die in Dataset Management übersetzt wird.
+- Die Fähigkeiten in `ctl` bereitstellen: `fdp on`, Anzahl der PH, RU-Größe und `vwc`.
 
 ### OpenBSD `nvme(4)`
 
-- Hay que confirmar cómo funciona el port de gefs: si va en el kernel o en espacio de usuario sobre el dispositivo crudo.
-- En el kernel: añadir un campo de pista a `struct buf` (o usar un flag) que `nvme(4)` traduzca a DSPEC.
-- En espacio de usuario: un `ioctl` de passthrough en `nvme(4)`, o un `ioctl` por descriptor equivalente al `placement N` de 9front.
+- Es muss geklärt werden, wie der gefs-Port funktioniert: ob er im Kernel oder im Userspace auf dem Raw-Device läuft.
+- Im Kernel: ein Hinweisfeld zu `struct buf` hinzufügen (oder ein Flag verwenden), das `nvme(4)` in DSPEC übersetzt.
+- Im Userspace: ein Passthrough-`ioctl` in `nvme(4)` oder ein `ioctl` pro Deskriptor, äquivalent zu `placement N` unter 9front.
 
-## Medición
+## Messung
 
-El éxito se mide por la WAF del SSD con el disco al 80 % de ocupación, comparando la misma carga con y sin FDP.
+Der Erfolg wird an der WAF der SSD bei 80 % Füllstand gemessen, wobei dieselbe Last mit und ohne FDP verglichen wird.
 
-### Métricas
+### Metriken
 
-| Métrica | Fórmula | Fuente |
+| Metrik | Formel | Quelle |
 | --- | --- | --- |
-| WAF del SSD | bytes escritos al NAND / bytes escritos por el host | Log de estadísticas FDP, antes y después de cada prueba |
-| WAF de gefs | bytes escritos por el host / bytes de datos de usuario | Contadores nuevos en gefs |
-| WAF total | producto de las dos | — |
-| Vida por clase | histograma de `gen_liberación − birth_gen` por clase | Contadores nuevos en gefs, al liberar o al pasar al deadlist |
-| Bytes por clase | bytes escritos por clase y PH | Contadores nuevos en gefs |
+| WAF der SSD | zum NAND geschriebene Bytes / vom Host geschriebene Bytes | FDP-Statistik-Log, vor und nach jedem Test |
+| WAF von gefs | vom Host geschriebene Bytes / Bytes an Nutzerdaten | Neue Zähler in gefs |
+| Gesamt-WAF | Produkt der beiden | — |
+| Lebensdauer pro Klasse | Histogramm von `gen_freigabe − birth_gen` pro Klasse | Neue Zähler in gefs, beim Freigeben oder beim Übergang in die deadlist |
+| Bytes pro Klasse | geschriebene Bytes pro Klasse und PH | Neue Zähler in gefs |
 
-El histograma de vida se puede sacar ya en cualquier disco y valida la tabla de mapeo antes de tener hardware FDP.
+Das Lebensdauer-Histogramm lässt sich schon auf jeder Platte erheben und validiert die Mapping-Tabelle, bevor FDP-Hardware vorhanden ist.
 
-### Banco de pruebas
+### Testaufbau
 
-- QEMU ≥ 8.0 con FDP emulado, para comprobar que las escrituras llevan el PH correcto. QEMU no reproduce el GC del NAND, así que no sirve para medir WAF.
-- Un SSD real con FDP, configurado con un Reclaim Group y ≥8 RUH. Antes de cada prueba, Deallocate de todo el disco en lugar de precondicionarlo escribiendo, como recomienda SNIA.
+- QEMU ≥ 8.0 mit emuliertem FDP, um zu prüfen, dass die Schreibvorgänge den richtigen PH tragen. QEMU bildet das NAND-GC nicht nach und taugt daher nicht zur WAF-Messung.
+- Eine echte SSD mit FDP, konfiguriert mit einer Reclaim Group und ≥8 RUH. Vor jedem Test ein Deallocate der gesamten Platte statt Vorkonditionierung durch Schreiben, wie von SNIA empfohlen.
 
-### Cargas
+### Lasten
 
-1. Compilar el kernel de 9front en bucle: muchos ficheros pequeños, creados y borrados.
-2. Escrituras aleatorias de 4 KiB dentro de un fichero grande.
-3. Lo mismo con snapshots cada hora conservados 24 h, para ver cómo la retención alarga la vida.
-4. Ocupación al 50 %, 80 % y 90 %.
+1. Den 9front-Kernel in einer Schleife kompilieren: viele kleine Dateien, die erstellt und gelöscht werden.
+2. Zufällige 4-KiB-Schreibvorgänge innerhalb einer großen Datei.
+3. Dasselbe mit stündlichen Snapshots, die 24 h aufbewahrt werden, um zu sehen, wie die Aufbewahrung die Lebensdauer verlängert.
+4. Füllstand bei 50 %, 80 % und 90 %.
 
-### Criterios de éxito
+### Erfolgskriterien
 
-- WAF del SSD ≤ 1,2 al 80 % de ocupación en las cargas 1 y 2.
-- Ninguna pérdida de rendimiento en un disco sin FDP.
-- Ningún bloque desasignado mientras lo referencia un commit durable (prueba de caída con corte en mitad del commit).
+- WAF der SSD ≤ 1,2 bei 80 % Füllstand in den Lasten 1 und 2.
+- Kein Performanceverlust auf einer Platte ohne FDP.
+- Kein Block wird deallokiert, solange ihn ein durable Commit referenziert (Absturztest mit Stromausfall mitten im Commit).
 
-## Fases, riesgos y preguntas abiertas
+## Phasen, Risiken und offene Fragen
 
-### Fases
+### Phasen
 
-Cada fase se puede publicar por separado y aporta algo aunque las siguientes no lleguen.
+Jede Phase kann separat veröffentlicht werden und bringt etwas, auch wenn die folgenden nicht kommen.
 
-| Fase | Entrega | Necesita FDP |
+| Phase | Lieferumfang | Braucht FDP |
 | --- | --- | --- |
-| 1 | Contadores en gefs: bytes por clase e histograma de vida | No |
-| 2 | Deallocate diferido tras commit y época | No |
-| 3 | `sdnvme`: directiva Data Placement, `placement N`, capacidades en `ctl` | QEMU |
-| 4 | gefs: clase → PH en el asignador y los syncers; tabla en la configuración de montaje | QEMU |
-| 5 | Medición en un SSD real; ajustar el mapeo con el histograma | Sí |
-| 6 | Opcional: alinear ráfagas a RU, clase de datos fríos, port a `nvme(4)` | Sí |
+| 1 | Zähler in gefs: Bytes pro Klasse und Lebensdauer-Histogramm | Nein |
+| 2 | Verzögertes Deallocate nach Commit und Epoche | Nein |
+| 3 | `sdnvme`: Data-Placement-Direktive, `placement N`, Fähigkeiten in `ctl` | QEMU |
+| 4 | gefs: Klasse → PH im Allokator und in den syncern; Tabelle in der Mount-Konfiguration | QEMU |
+| 5 | Messung auf einer echten SSD; Mapping anhand des Histogramms anpassen | Ja |
+| 6 | Optional: Schreibschübe an der RU ausrichten, Klasse für kalte Daten, Port auf `nvme(4)` | Ja |
 
-### Riesgos
+### Risiken
 
-- **Retención de snapshots:** si se conservan muchos, la vida de pivots y hojas se parece a la de los datos y la separación aporta menos. La fase 1 lo dirá.
-- **Pocos RUH:** con 8 RUH, o RUH compartidos con otros namespaces, hay que colapsar clases.
-- **Deallocate demasiado pronto:** es el único cambio que puede perder datos. Se mitiga con el orden estricto y la prueba de caída.
-- **Latencia de Deallocate:** en algunos SSD, los lotes grandes producen picos de latencia. Hay que limitar el tamaño del lote y su ritmo.
-- **Hardware:** hay pocos SSD con FDP fuera de los centros de datos. Sin uno no hay fase 5.
+- **Snapshot-Aufbewahrung:** Werden viele aufbewahrt, ähnelt die Lebensdauer von Pivots und Blättern der der Daten, und die Trennung bringt weniger. Phase 1 wird es zeigen.
+- **Wenige RUH:** Mit 8 RUH, oder mit RUH, die mit anderen Namespaces geteilt werden, müssen Klassen zusammengelegt werden.
+- **Zu frühes Deallocate:** Es ist die einzige Änderung, die Daten verlieren kann. Abgemildert wird das durch die strikte Reihenfolge und den Absturztest.
+- **Deallocate-Latenz:** Bei manchen SSDs verursachen große Batches Latenzspitzen. Batch-Größe und Rate müssen begrenzt werden.
+- **Hardware:** Außerhalb von Rechenzentren gibt es wenige SSDs mit FDP. Ohne eine gibt es keine Phase 5.
 
-### Preguntas abiertas
+### Offene Fragen
 
-- ¿Qué retención de snapshots usa gefs por defecto y cuánto alarga la vida de los pivots?
-- ¿`sdnvme` ya envía Dataset Management, o hay que añadirlo?
-- ¿El port de OpenBSD va en el kernel o en espacio de usuario?
-- ¿Merece la pena un PH aparte para el superbloque, que se sobrescribe en el mismo sitio en cada commit?
-- ¿Qué SSD con FDP hay a mano para la fase 5?
+- Welche Snapshot-Aufbewahrung verwendet gefs standardmäßig, und wie stark verlängert sie die Lebensdauer der Pivots?
+- Sendet `sdnvme` bereits Dataset Management, oder muss es ergänzt werden?
+- Läuft der OpenBSD-Port im Kernel oder im Userspace?
+- Lohnt sich ein eigener PH für den Superblock, der bei jedem Commit an derselben Stelle überschrieben wird?
+- Welche SSD mit FDP ist für Phase 5 verfügbar?
 
-## Fuentes
+## Quellen
 
 - [Gefs, Ori Bernstein (orib.dev)](https://orib.dev/gefs.html)
-- [gefs.ms en el árbol de 9front](https://git.9front.org/plan9front/9front/35cffbd08f2428ef2b9be2bc293aa4b345cf082a/sys/doc/gefs.ms/f.html)
-- [Introduction to Flexible Data Placement, SNIA (feb. 2026)](https://www.snia.org/sites/default/files/technical-work/whitepapers/IntroductiontoStorageDataPlacementwithFDP.pdf)
+- [gefs.ms im 9front-Baum](https://git.9front.org/plan9front/9front/35cffbd08f2428ef2b9be2bc293aa4b345cf082a/sys/doc/gefs.ms/f.html)
+- [Introduction to Flexible Data Placement, SNIA (Feb. 2026)](https://www.snia.org/sites/default/files/technical-work/whitepapers/IntroductiontoStorageDataPlacementwithFDP.pdf)
 - [FDP Overview, NVM Express (FMS 2023)](https://nvmexpress.org/wp-content/uploads/FMS-2023-Flexible-Data-Placement-FDP-Overview.pdf)
 - [Towards Efficient Flash Caches with Emerging NVMe FDP SSDs (EuroSys 2025)](https://arxiv.org/pdf/2503.11665)
-- [What should we do about the nvme atomics mess? (linux-nvme, jul. 2025)](https://lists.infradead.org/pipermail/linux-nvme/2025-July/057343.html)
+- [What should we do about the nvme atomics mess? (linux-nvme, Juli 2025)](https://lists.infradead.org/pipermail/linux-nvme/2025-July/057343.html)
 - [BetrFS: A Right-Optimized Write-Optimized File System (FAST 2015)](https://www.cs.unc.edu/~porter/pubs/fast15-final.pdf)
 
 ---
 
-© 2026 Silvio Macías Sánchez. Todos los derechos reservados. Libre para investigación y docencia sin ánimo de lucro, citando al autor; para uso comercial, escríbeme a silvio.macias.sanchez@abstract.bike o info@abstractarchitectures.ltd. Ver [COPYRIGHT.md](../COPYRIGHT.md).
+© 2026 Silvio Macías Sánchez. Alle Rechte vorbehalten. Frei für Forschung und Lehre ohne Gewinnabsicht, unter Nennung des Autors; für die kommerzielle Nutzung schreib mir an silvio.macias.sanchez@abstract.bike oder info@abstractarchitectures.ltd. Siehe [COPYRIGHT.md](../COPYRIGHT.md).
