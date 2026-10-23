@@ -16,6 +16,7 @@ Each pattern takes a few minutes to read and starts with a one-sentence summary 
 | [**Agency**](abstract-architectures/agencia.md) | Agents that learn, job by job, which is the cheapest model that does its work well. | 6 min |
 | [**Cost Tracking**](abstract-architectures/seguimiento-de-costes.md) | Every commit from an AI says which model wrote it and how much it cost. | 6 min |
 | [**Honey Keys**](abstract-architectures/llaves-de-miel.md) | A real, harmless key where it should never show up; if it does, whoever issued it alerts you. | 7 min |
+| [**Purpose over Personality**](abstract-architectures/proposito-sobre-personalidad.md) | Your agent's environment shouldn't say who you are, but what it's here to do. | 7 min |
 
 ### How they relate
 
@@ -29,6 +30,7 @@ flowchart LR
     SC["🧾 Cost Tracking<br/><i>was it worth it?</i>"] -.-> AG
     SC -.-> FO
     LM["🍯 Honey Keys<br/><i>has it leaked?</i>"] -. "watches its stores" .-> FO
+    PP["🎯 Purpose over Personality<br/><i>the environment as context</i>"] -. "reduces what gets out" .- LM
 ```
 
 - **Do you use AI to learn or create?** Start with [Motivation Inversion](motivacion/inversion-de-motivacion.md).
@@ -37,6 +39,7 @@ flowchart LR
 - **Do you repeat the same prompt over and over?** Start with the [Agency](abstract-architectures/agencia.md).
 - **Are agents committing to your repos and you don't know how much they cost?** Start with [Cost Tracking](abstract-architectures/seguimiento-de-costes.md).
 - **Are you worried your agents' context might leak?** Start with [Honey Keys](abstract-architectures/llaves-de-miel.md).
+- **Do your agents work on your machine, among your folders?** Start with [Purpose over Personality](abstract-architectures/proposito-sobre-personalidad.md).
 
 ### How each pattern is written
 
