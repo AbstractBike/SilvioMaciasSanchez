@@ -16,6 +16,7 @@ Jedes Muster liest sich in wenigen Minuten und beginnt mit einer Zusammenfassung
 | [**Agentur**](abstract-architectures/agencia.md) | Agenten, die Auftrag für Auftrag lernen, welches das günstigste Modell ist, das seine Arbeit gut erledigt. | 6 Min. |
 | [**Kostenverfolgung**](abstract-architectures/seguimiento-de-costes.md) | Jeder Commit einer KI sagt, welches Modell ihn geschrieben hat und was er gekostet hat. | 6 Min. |
 | [**Honigschlüssel**](abstract-architectures/llaves-de-miel.md) | Ein echter, harmloser Schlüssel an einem Ort, an dem er nie auftauchen dürfte; taucht er doch auf, meldet sich der Aussteller bei dir. | 7 Min. |
+| [**Zweck vor Persönlichkeit**](abstract-architectures/proposito-sobre-personalidad.md) | Die Umgebung deines Agenten soll nicht verraten, wer du bist, sondern wozu er da ist. | 7 Min. |
 
 ### Wie sie zusammenhängen
 
@@ -29,6 +30,7 @@ flowchart LR
     SC["🧾 Kostenverfolgung<br/><i>Hat es sich gelohnt?</i>"] -.-> AG
     SC -.-> FO
     LM["🍯 Honigschlüssel<br/><i>Ist etwas durchgesickert?</i>"] -. "überwacht seine Speicher" .-> FO
+    PP["🎯 Zweck vor Persönlichkeit<br/><i>die Umgebung als Kontext</i>"] -. "verringert, was nach außen dringt" .- LM
 ```
 
 - **Nutzt du KI, um zu lernen oder zu erschaffen?** Fang mit der [Motivationsumkehr](motivacion/inversion-de-motivacion.md) an.
@@ -37,6 +39,7 @@ flowchart LR
 - **Wiederholst du immer wieder denselben Prompt?** Fang mit der [Agentur](abstract-architectures/agencia.md) an.
 - **Committen Agenten in deine Repos und du weißt nicht, was sie kosten?** Fang mit der [Kostenverfolgung](abstract-architectures/seguimiento-de-costes.md) an.
 - **Macht dir Sorgen, dass der Kontext deiner Agenten durchsickern könnte?** Fang mit den [Honigschlüsseln](abstract-architectures/llaves-de-miel.md) an.
+- **Arbeiten deine Agenten auf deinem Rechner, zwischen deinen Ordnern?** Fang mit [Zweck vor Persönlichkeit](abstract-architectures/proposito-sobre-personalidad.md) an.
 
 ### Wie jedes Muster aufgebaut ist
 
