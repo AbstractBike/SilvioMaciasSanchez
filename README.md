@@ -16,6 +16,7 @@ Cada patrón se lee en unos minutos y empieza con un resumen de una frase y una 
 | [**Agencia**](abstract-architectures/agencia.md) | Agentes que aprenden, encargo a encargo, cuál es el modelo más barato que hace bien su trabajo. | 6 min |
 | [**Seguimiento de costes**](abstract-architectures/seguimiento-de-costes.md) | Cada commit de una IA dice qué modelo lo escribió y cuánto costó. | 6 min |
 | [**Llaves de miel**](abstract-architectures/llaves-de-miel.md) | Una clave real e inofensiva donde no debería salir nunca; si sale, te avisa quien la emitió. | 7 min |
+| [**Propósito sobre personalidad**](abstract-architectures/proposito-sobre-personalidad.md) | Que el entorno de tu agente no diga quién eres, sino a qué ha venido. | 7 min |
 
 ### Cómo se relacionan
 
@@ -29,6 +30,7 @@ flowchart LR
     SC["🧾 Seguimiento de costes<br/><i>¿salió a cuenta?</i>"] -.-> AG
     SC -.-> FO
     LM["🍯 Llaves de miel<br/><i>¿se ha filtrado?</i>"] -. "vigila sus almacenes" .-> FO
+    PP["🎯 Propósito sobre personalidad<br/><i>el entorno como contexto</i>"] -. "reduce lo que sale" .- LM
 ```
 
 - **¿Usas la IA para aprender o crear?** Empieza por la [Inversión de Motivación](motivacion/inversion-de-motivacion.md).
@@ -37,6 +39,7 @@ flowchart LR
 - **¿Repites el mismo prompt una y otra vez?** Empieza por la [Agencia](abstract-architectures/agencia.md).
 - **¿Commitean agentes en tus repos y no sabes cuánto cuestan?** Empieza por el [Seguimiento de costes](abstract-architectures/seguimiento-de-costes.md).
 - **¿Te preocupa que se filtre el contexto de tus agentes?** Empieza por las [Llaves de miel](abstract-architectures/llaves-de-miel.md).
+- **¿Tus agentes trabajan en tu máquina, entre tus carpetas?** Empieza por [Propósito sobre personalidad](abstract-architectures/proposito-sobre-personalidad.md).
 
 ### Cómo está escrito cada patrón
 
